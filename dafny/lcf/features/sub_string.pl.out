@@ -1,0 +1,10 @@
+   Call: (12) go
+   Unify: (12) go
+   Call: (13) ends_with_dot("hello world.")
+   Unify: (13) ends_with_dot("hello world.")
+   Call: (14) sub_string("hello world.", _11554, 1, 0, _11478)
+   Exit: (14) sub_string("hello world.", 11, 1, 0, ".")
+   Call: (14) "."=="."
+   Exit: (14) "."=="."
+   Exit: (13) ends_with_dot("hello world.")
+   Exit: (12) go
