@@ -1,0 +1,27 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) forall(once(query(_10004, _10006)), (write(_10004), write(_10006), nl))
+unify	exit	=
+                Unify: (16) source("n0")
+                Exit: (16) source("n0")
+exit	call	=
+                Exit: (16) source("n0")
+                Call: (16) destination(_10006)
+call	fail	=
+                 Call: (17) edge("n0", "n3")
+                 Fail: (17) edge("n0", "n3")
+fail	redo	<
+                 Fail: (17) edge("n0", "n3")
+                Redo: (16) connected("n0", "n3")
+redo	unify	=
+                Redo: (16) connected("n0", "n3")
+                Unify: (16) connected("n0", "n3")
+exit	exit	<
+                  Exit: (18) edge("n1", "n3")
+                 Exit: (17) connected("n1", "n3")
+call	exit	=
+               Call: (15) write("n0")
+               Exit: (15) write("n0")

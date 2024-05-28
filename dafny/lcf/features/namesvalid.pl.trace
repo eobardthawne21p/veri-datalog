@@ -1,0 +1,46 @@
+Call: (12) go
+Unify: (12) go
+ Call: (13) acceptName("auth.gr")
+ Unify: (13) acceptName("auth.gr")
+  Call: (14) findall(_11224, namePermitted(_11224), _11230)
+  Unify: (14) findall(_11224, user:namePermitted(_11224), _11230)
+      Call: (18) namePermitted(_11224)
+      Unify: (18) namePermitted("auth.edu.gr")
+      Exit: (18) namePermitted("auth.edu.gr")
+      Redo: (18) namePermitted(_11224)
+      Unify: (18) namePermitted("auth.gr")
+      Exit: (18) namePermitted("auth.gr")
+  Exit: (14) findall(_11224, user:namePermitted(_11224), ["auth.edu.gr", "auth.gr"])
+  Call: (14) namesValid(["auth.edu.gr", "auth.gr"])
+  Unify: (14) namesValid(["auth.edu.gr", "auth.gr"])
+   Call: (15) forall(member(_18054, ["auth.edu.gr", "auth.gr"]), nameValid(_18054))
+   Unify: (15) forall(user:member(_18054, ["auth.edu.gr", "auth.gr"]), user:nameValid(_18054))
+    Call: (16) nameValid("auth.edu.gr")
+    Unify: (16) nameValid("auth.edu.gr")
+     Call: (17) sub_string("auth.edu.gr", 0, 1, _2890, _2810)
+     Exit: (17) sub_string("auth.edu.gr", 0, 1, 10, "a")
+     Call: (17) "a"\="."
+     Exit: (17) "a"\="."
+     Call: (17) sub_string("auth.edu.gr", _5372, 1, 0, _5296)
+     Exit: (17) sub_string("auth.edu.gr", 10, 1, 0, "r")
+     Call: (17) "r"\="."
+     Exit: (17) "r"\="."
+    Exit: (16) nameValid("auth.edu.gr")
+    Call: (16) nameValid("auth.gr")
+    Unify: (16) nameValid("auth.gr")
+     Call: (17) sub_string("auth.gr", 0, 1, _9686, _9606)
+     Exit: (17) sub_string("auth.gr", 0, 1, 6, "a")
+     Call: (17) "a"\="."
+     Exit: (17) "a"\="."
+     Call: (17) sub_string("auth.gr", _12168, 1, 0, _12092)
+     Exit: (17) sub_string("auth.gr", 6, 1, 0, "r")
+     Call: (17) "r"\="."
+     Exit: (17) "r"\="."
+    Exit: (16) nameValid("auth.gr")
+   Exit: (15) forall(user:member(_98, ["auth.edu.gr", "auth.gr"]), user:nameValid(_98))
+  Exit: (14) namesValid(["auth.edu.gr", "auth.gr"])
+  Call: (14) lists:member("auth.gr", ["auth.edu.gr", "auth.gr"])
+  Unify: (14) lists:member("auth.gr", ["auth.edu.gr", "auth.gr"])
+  Exit: (14) lists:member("auth.gr", ["auth.edu.gr", "auth.gr"])
+ Exit: (13) acceptName("auth.gr")
+Exit: (12) go

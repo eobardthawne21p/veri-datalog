@@ -1,0 +1,24 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) acceptName("auth.gr")
+unify	exit	=
+                  Unify: (18) namePermitted("auth.edu.gr")
+                  Exit: (18) namePermitted("auth.edu.gr")
+exit	redo	=
+                  Exit: (18) namePermitted("auth.edu.gr")
+                  Redo: (18) namePermitted(_11224)
+redo	unify	=
+                  Redo: (18) namePermitted(_11224)
+                  Unify: (18) namePermitted("auth.gr")
+exit	exit	<
+                  Exit: (18) namePermitted("auth.gr")
+              Exit: (14) findall(_11224, user:namePermitted(_11224), ["auth.edu.gr", "auth.gr"])
+exit	call	=
+              Exit: (14) findall(_11224, user:namePermitted(_11224), ["auth.edu.gr", "auth.gr"])
+              Call: (14) namesValid(["auth.edu.gr", "auth.gr"])
+call	exit	=
+                 Call: (17) sub_string("auth.edu.gr", 0, 1, _2890, _2810)
+                 Exit: (17) sub_string("auth.edu.gr", 0, 1, 10, "a")

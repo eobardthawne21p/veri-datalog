@@ -1,0 +1,48 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) forall(query(_10000), (write(_10000), nl))
+unify	exit	=
+               Unify: (15) source("n0")
+               Exit: (15) source("n0")
+exit	call	=
+               Exit: (15) source("n0")
+               Call: (15) connected("n0", _10000)
+exit	exit	<
+                Exit: (16) edge("n0", "n1")
+               Exit: (15) connected("n0", "n1")
+call	fail	=
+                Call: (16) edge("n1", "m0")
+                Fail: (16) edge("n1", "m0")
+fail	redo	<
+                Fail: (16) edge("n1", "m0")
+               Redo: (15) connected("n1", "m0")
+redo	unify	=
+               Redo: (15) connected("n1", "m0")
+               Unify: (15) connected("n1", "m0")
+fail	fail	<
+                 Fail: (17) edge("n3", _9896)
+                Fail: (16) connected("n3", "m0")
+fail	redo	=
+                Fail: (16) connected("n3", "m0")
+                Redo: (16) edge("n1", _4380)
+redo	exit	=
+              Redo: (14) query("n1")
+              Exit: (14) query("n1")
+exit	call	>
+              Exit: (14) query("n1")
+               Call: (15) write("n1")
+call	exit	=
+               Call: (15) write("n1")
+               Exit: (15) write("n1")
+exit	redo	=
+               Exit: (15) nl
+               Redo: (15) connected("n0", _58)
+exit	redo	>
+               Exit: (15) nl
+                 Redo: (17) edge("n1", _58)
+fail	exit	<
+              Fail: (14) query(_58)
+             Exit: (13) forall(user:query(_58), user:(write(_58), nl))

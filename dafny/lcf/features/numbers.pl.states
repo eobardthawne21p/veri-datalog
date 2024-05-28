@@ -1,0 +1,15 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) query(5)
+call	exit	=
+              Call: (14) _11628=1
+              Exit: (14) 1=1
+exit	call	=
+              Exit: (14) 1=1
+              Call: (14) _12854=10
+exit	exit	<
+              Exit: (14) 5<10
+             Exit: (13) query(5)

@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import re
+import sys
+import collections
+import argparse
+import logging
+import itertools
+
+
+class Line(collections.namedtuple("Line", ["text", "level", "port"])):
+    @property
+    def indented(self):
+        indent = " " * self.level
+        return indent + self.text
+
+
+def parse_line(line):
+    # Example: "^  Call: (15) findall(_35438, certs:keyUsage(cert_2, _35438), _35452)"
+    line = line.lstrip(' ^').rstrip()
+    m = re.match(r'(\w+):\s+\((\d+)\)', line)
+    if not m:
+        return None
+    port = m.group(1)
+    assert port in ("Call", "Redo", "Exit", "Fail", "Unify"), f"invalid port: {port}"
+    level = int(m.group(2))
+    return Line(text=line, level=level, port=port)
+
+
+def parse_trace(lines):
+    for line in lines:
+        l = parse_line(line)
+        if not l:
+            continue
+        yield l
+
+
+def command_format(opts):
+    base_level = opts.base_level
+    for l in parse_trace(opts.input):
+        if base_level is None:
+            base_level = l.level
+        assert l.level >= base_level
+        indent = " " * (l.level - base_level)
+        print(f"{indent}{l.text}", file=opts.output)
+
+
+Transition = collections.namedtuple("Transition", ["from_port", "to_port", "direction"])
+
+def command_states(opts):
+    seen = set()
+    for p, n in itertools.pairwise(parse_trace(opts.input)):
+        direction = ">" if n.level > p.level else "<" if n.level < p.level else "="
+        transition = Transition(from_port=p.port, to_port=n.port, direction=direction)
+        if transition in seen:
+            continue
+        seen.add(transition)
+
+        print(f"{transition.from_port}\t{transition.to_port}\t{transition.direction}".lower())
+        print(p.indented)
+        print(n.indented)
+
+
+def main(args):
+    # Options.
+    parser = argparse.ArgumentParser(description='SWI-PL Trace Processor')
+    parser.add_argument('--input', type=argparse.FileType('r'), default=sys.stdin, help="input trace")
+    subparsers = parser.add_subparsers()
+
+    format_parser = subparsers.add_parser("format", aliases=["fmt"], help="format trace")
+    format_parser.set_defaults(cmd=command_format)
+    format_parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout, help='output file')
+    format_parser.add_argument('--base-level', type=int, help='base trace frame level')
+
+    states_parser = subparsers.add_parser("states", help="show state transitions")
+    states_parser.set_defaults(cmd=command_states)
+
+    opts = parser.parse_args(args)
+    logging.basicConfig(level=logging.INFO)
+    opts.cmd(opts)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
