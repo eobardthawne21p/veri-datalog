@@ -1,0 +1,9 @@
+   Call: (12) go
+   Unify: (12) go
+   Call: (13) third_is_seven([3, 42, 7, 9])
+   Unify: (13) third_is_seven([3, 42, 7, 9])
+   Call: (14) lists:nth1(3, [3, 42, 7, 9], 7)
+   Unify: (14) lists:nth1(3, [3, 42, 7, 9], 7)
+   Exit: (14) lists:nth1(3, [3, 42, 7, 9], 7)
+   Exit: (13) third_is_seven([3, 42, 7, 9])
+   Exit: (12) go
