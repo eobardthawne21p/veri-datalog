@@ -1,0 +1,9 @@
+Call: (12) go
+Unify: (12) go
+ Call: (13) single_digit_prime(7)
+ Unify: (13) single_digit_prime(7)
+  Call: (14) lists:member(7, [2, 3, 5, 7])
+  Unify: (14) lists:member(7, [2, 3, 5, 7])
+  Exit: (14) lists:member(7, [2, 3, 5, 7])
+ Exit: (13) single_digit_prime(7)
+Exit: (12) go

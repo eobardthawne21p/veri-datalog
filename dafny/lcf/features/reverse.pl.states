@@ -1,0 +1,12 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) one_two_three([1, 2, 3])
+unify	exit	=
+              Unify: (14) lists:reverse([1, 2, 3], [3, 2, 1])
+              Exit: (14) lists:reverse([1, 2, 3], [3, 2, 1])
+exit	exit	<
+              Exit: (14) lists:reverse([1, 2, 3], [3, 2, 1])
+             Exit: (13) one_two_three([1, 2, 3])

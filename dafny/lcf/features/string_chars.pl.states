@@ -1,0 +1,21 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) num_chars("hello", 5)
+call	exit	=
+              Call: (14) string_chars("hello", _11450)
+              Exit: (14) string_chars("hello", [h, e, l, l, o])
+exit	call	=
+              Exit: (14) string_chars("hello", [h, e, l, l, o])
+              Call: (14) length([h, e, l, l, o], 5)
+unify	unify	=
+              Unify: (14) length([h, e, l, l, o], 5)
+              Unify: (14) length([h, e, l, l, o], 5)
+unify	exit	=
+              Unify: (14) length([h, e, l, l, o], 5)
+              Exit: (14) length([h, e, l, l, o], 5)
+exit	exit	<
+              Exit: (14) length([h, e, l, l, o], 5)
+             Exit: (13) num_chars("hello", 5)
