@@ -1,0 +1,8 @@
+   Call: (12) go
+   Unify: (12) go
+   Call: (13) hello_world("HeLLo wOrLD")
+   Unify: (13) hello_world("HeLLo wOrLD")
+   Call: (14) string_lower("HeLLo wOrLD", "hello world")
+   Exit: (14) string_lower("HeLLo wOrLD", "hello world")
+   Exit: (13) hello_world("HeLLo wOrLD")
+   Exit: (12) go
