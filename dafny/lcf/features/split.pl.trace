@@ -1,0 +1,13 @@
+Call: (12) go
+Unify: (12) go
+ Call: (13) three_parts("a.b.c")
+ Unify: (13) three_parts("a.b.c")
+  Call: (14) split_string("a.b.c", ".", "", _11578)
+  Exit: (14) split_string("a.b.c", ".", "", ["a", "b", "c"])
+  Call: (14) length(["a", "b", "c"], _12856)
+  Unify: (14) length(["a", "b", "c"], _12856)
+  Exit: (14) length(["a", "b", "c"], 3)
+  Call: (14) 3==3
+  Exit: (14) 3==3
+ Exit: (13) three_parts("a.b.c")
+Exit: (12) go

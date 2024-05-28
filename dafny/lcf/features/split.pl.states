@@ -1,0 +1,18 @@
+call	unify	=
+            Call: (12) go
+            Unify: (12) go
+unify	call	>
+            Unify: (12) go
+             Call: (13) three_parts("a.b.c")
+call	exit	=
+              Call: (14) split_string("a.b.c", ".", "", _11578)
+              Exit: (14) split_string("a.b.c", ".", "", ["a", "b", "c"])
+exit	call	=
+              Exit: (14) split_string("a.b.c", ".", "", ["a", "b", "c"])
+              Call: (14) length(["a", "b", "c"], _12856)
+unify	exit	=
+              Unify: (14) length(["a", "b", "c"], _12856)
+              Exit: (14) length(["a", "b", "c"], 3)
+exit	exit	<
+              Exit: (14) 3==3
+             Exit: (13) three_parts("a.b.c")
