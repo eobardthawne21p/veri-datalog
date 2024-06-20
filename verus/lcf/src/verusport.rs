@@ -17,6 +17,8 @@
 //#[allow(inconsistent_fields)]
 //use vstd::std_specs::result;
 use vstd::prelude::*;
+use crate::string_hash_map::StringHashMap;
+
 verus! {
 
 /* enum Result<A> {
@@ -56,9 +58,9 @@ impl<A> Result<A> {
   }
   
 
-  fn main(){
+  // fn main(){
 
-  }
+  // }
 }
 
     
