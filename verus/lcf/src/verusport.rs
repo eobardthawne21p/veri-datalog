@@ -18,6 +18,8 @@
 //use vstd::std_specs::result;
 use vstd::prelude::*;
 use crate::string_hash_map::StringHashMap;
+use vstd::seq::Seq;
+
 
 verus! {
 
@@ -50,12 +52,42 @@ impl<A> Result<A> {
     }
   } */
 
-  enum Const {
-    Atom { val : String },
-    Nat { i : u16 }, 
-    Str { s : String },
-    List { l : Vec<Const>} // vector???
+pub enum Const {
+  Atom (String),
+  Nat (u64), 
+  Str (String),
+  List (Vec<Const>) // vector???
+  } 
+
+/* pub enum SpecConst {
+  Atom (String),
+  Nat (u64), 
+  Str (String),
+  List (Seq<SpecConst>)
+  } */
+
+/* impl DeepView for Const {
+  type V = SpecConst;
+
+  open spec fn deep_view(&self) -> Self::V {
+    match self {
+      Const::Atom(s) => SpecConst::Atom(*s),
+      Const::Nat(n) => SpecConst::Nat(*n),
+      Const::Str(s) => SpecConst::Str(*s),
+      Const::List(vec) => SpecConst::List(vec.deep_view()),
+        
+        /* let mut seq = Seq::<SpecConst>::empty();
+        for i in 0..vec.len() {
+            seq = seq.push(vec[i as int].deep_view());
+        }
+
+        SpecConst::List(seq) */
+    
+      
+    }
   }
+} */
+  
   
 
   // fn main(){
