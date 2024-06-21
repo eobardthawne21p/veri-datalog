@@ -17,6 +17,7 @@
 //#[allow(inconsistent_fields)]
 //use vstd::std_specs::result;
 use vstd::prelude::*;
+use crate::string_hash_map::StringHashMap;
 use vstd::seq::Seq;
 
 
@@ -89,9 +90,9 @@ pub enum Const {
   
   
 
-  fn main(){
+  // fn main(){
 
-  }
+  // }
 }
 
     
