@@ -1,5 +1,7 @@
 
 
+// We should be able to not need this, but left this here just in case. Using vstd::std_specs::result
+//code is below after verus macro
 /* datatype Result<A> = Ok(val : A) | Err {
   predicate IsFailure() { this.Err? }
   fn PropagateFailure() : Result<A>
@@ -19,6 +21,8 @@
 use vstd::prelude::*;
 use crate::string_hash_map::StringHashMap;
 use vstd::seq::Seq;
+use vstd::std_specs::result;
+
 
 
 verus! {
@@ -39,7 +43,8 @@ impl<A> Result<A> {
         requires self.IsFailure()
     {
         Result::Err 
-    }
+    }                                         // use vstd::std_specs::result instead
+                                              // code is here just in case
 
     
     fn Extract(&self) -> &A 
@@ -52,26 +57,27 @@ impl<A> Result<A> {
     }
   } */
 
-pub enum Const {
-  Atom (String),
-  Nat (u64), 
-  Str (String),
-  List (Vec<Const>) // vector???
-  } 
+  // enum Const declaration
+  pub enum Const {
+    Atom (String),
+    Nat (u64), 
+    Str (String),
+    List (Vec<Const>) // vector???
+    } 
 
 /* pub enum SpecConst {
   Atom (String),
-  Nat (u64), 
+  Nat (u64),            // waiting on conversion from vec to seq issue to be resolved
   Str (String),
   List (Seq<SpecConst>)
   } */
 
-/* impl DeepView for Const {
+/* impl DeepView for Const {    // attmept at forcing vec units into seq
   type V = SpecConst;
 
   open spec fn deep_view(&self) -> Self::V {
     match self {
-      Const::Atom(s) => SpecConst::Atom(*s),
+      Const::Atom(s) => SpecConst::Atom(*s), 
       Const::Nat(n) => SpecConst::Nat(*n),
       Const::Str(s) => SpecConst::Str(*s),
       Const::List(vec) => SpecConst::List(vec.deep_view()),
@@ -87,13 +93,25 @@ pub enum Const {
     }
   }
 } */
-  
-  
 
-  // fn main(){
-
-  // }
+  // Subst using StringHashMap from string_hash_map crate
+  type Subst = StringHashMap<Const>;
+  
+  /* 
+  predicate compatible_subst(s : Subst, t : Subst) {
+    forall v :: v in s.Keys && v in t.Keys ==> s[v] == t[v]
+  }
+*/
+spec fn compatible_subst(s : Subst, t : Subst) -> bool
+{
+  forall|v: String| s.view()[v.view()] == t.view()[v.view()]
 }
+  
+
+  fn main(){
+
+  }
+}  
 
     
 

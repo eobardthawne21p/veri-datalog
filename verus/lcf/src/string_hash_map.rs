@@ -2,6 +2,7 @@ use vstd::prelude::*;
 use std::hash::RandomState;
 use std::collections::HashMap;
 
+
 verus!{
 
 #[verifier::external_type_specification]
