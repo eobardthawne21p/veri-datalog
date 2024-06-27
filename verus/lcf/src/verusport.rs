@@ -1,23 +1,10 @@
 
 
-// We should be able to not need this, but left this here just in case. Using vstd::std_specs::result
-//code is below after verus macro
-/* datatype Result<A> = Ok(val : A) | Err {
-  predicate IsFailure() { this.Err? }
-  fn PropagateFailure() : Result<A>
-    requires IsFailure() {
-    Err
-  }
-  fn Extract() : A
-    requires !IsFailure() {
-    val
-  }
-} */
 
 
 
-//#[allow(inconsistent_fields)]
-//use vstd::std_specs::result;
+
+
 use vstd::prelude::*;
 use crate::string_hash_map::StringHashMap;
 use vstd::seq::Seq;
@@ -27,35 +14,7 @@ use vstd::std_specs::result;
 
 verus! {
 
-/* enum Result<A> {
-    Ok { val: A },
-    Err,
-}
 
-impl<A> Result<A> {
-    
-    spec fn IsFailure(&self) -> bool {
-        matches!(self, Result::Err {err})
-    }
-
-    
-    fn PropagateFailure(&self) -> Result<A> 
-        requires self.IsFailure()
-    {
-        Result::Err 
-    }                                         // use vstd::std_specs::result instead
-                                              // code is here just in case
-
-    
-    fn Extract(&self) -> &A 
-        requires !self.IsFailure()
-    {
-      match self {
-        Result::Ok { val } => val,
-        Result::Err => Err,
-    } 
-    }
-  } */
 
   // enum Const declaration
   pub enum Const {
@@ -97,20 +56,114 @@ impl<A> Result<A> {
   // Subst using StringHashMap from string_hash_map crate
   type Subst = StringHashMap<Const>;
   
+
   /* 
   predicate compatible_subst(s : Subst, t : Subst) {
     forall v :: v in s.Keys && v in t.Keys ==> s[v] == t[v]
   }
 */
-spec fn compatible_subst(s : Subst, t : Subst) -> bool
-{
-  forall|v: String| s.view()[v.view()] == t.view()[v.view()]
-}
-  
+// spec fn in place of predicate for compatible substitution
+  spec fn compatible_subst(s : Subst, t : Subst) -> bool
+  {
+    forall|v: String| s@[v@] == t@[v@]
+  }
 
+//DAFNY Code
+/* function merge_subst(s : Subst, t : Subst) : (res : Result<Subst>)
+   ensures res.Ok? ==> (
+              && compatible_subst(s, t)
+              && res.val.Keys == s.Keys + t.Keys
+              && (forall v :: v in s ==> res.val[v] == s[v])
+              && (forall v :: v in t ==> res.val[v] == t[v])
+            )
+{
+  if compatible_subst(s, t) then Ok(s+t) else Err
+} 
+*/
+
+//putting on hold temporarily
+  /* fn merge_subst(s : Subst, t : Subst) -> (res: Result<Subst, ()>)
+    ensures res.is_Ok() ==> (
+              compatible_subst(s, t),
+              res.val.Keys == s[v] + t[v],            //clean up code
+              (forall |v : Const| res.val[v] == s[v]),
+              (forall |v : Const| res.val[v] == t[v]),
+   ) 
+  {
+    if compatible_subst(s, t){
+       Ok(s+t)  // figure out 
+       // update do iteration and add all key-value pairs into single hashmap and run Ok
+       //on the joint set
+      
+    }
+    else 
+    {
+      Err(())
+    }
+  }  */
+
+/* 
+//Dafny code for Term
+  datatype Term = Const(val : Const) | Var(v : string) {
+    predicate complete_subst(s : Subst) {
+      match this
+      case Var(v) => v in s
+      case Const(_) => true
+    }
+    predicate concrete() {
+      Const?
+    }
+    function subst(s : Subst) : (res : Term)
+      requires complete_subst(s)
+      ensures res.concrete()
+    {
+      match this
+      case Var(v) => Const(s[v])
+      case Const(_) => this
+    }
+  } */
+
+ //Verus code for Term
+ // enumeration of data types in type Term (Const and Strings)
+ pub enum Term {
+  Const(Const),
+  Var(String),
+ }
+ 
+ impl Term {
+ //predicate complete_subst rewritten as a spec fn that returns bool
+  spec fn complete_subst(self, s: Subst) -> bool
+  {
+    match self {
+      Term::Var(v) => s@.contains_key(v@), //look for hashmap function v in s or key in map
+      Term::Const(_) => true,
+    }
+  } 
+  //predicate concrete rewritten as a spec fn that returns bool
+  spec fn concrete(self) -> bool
+  {
+    match self {
+      Term::Const(_) => true,
+      _ => false,
+    }
+      //find function for Const?
+  } 
+
+ //exec fn subst
+  /* fn subst(self, s: Subst) -> (res: Term)
+  requires self.complete_subst(s)
+  ensures res.concrete()
+ {
+  match self{
+      Term::Var(v) => Term::Const(s[v]),
+      Term::Const(_) => self,
+  }
+ } */
+} 
   fn main(){
 
   }
+
 }  
 
     
