@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 use vstd::prelude::*;
 use crate::string_hash_map::StringHashMap;
 use vstd::seq::Seq;
@@ -21,14 +14,26 @@ verus! {
     Atom (String),
     Nat (u64), 
     Str (String),
-    List (Vec<Const>) // vector???
+    //List (Vec<Const>), // vector???
     } 
 
-/* pub enum SpecConst {
+impl Const {
+  fn clone (&self) -> (res: Self)
+  ensures self == res
+  {
+    Const::Nat(3u64)
+    // match self {
+    //   Const::Atom(s) => Const::Atom(s.clone()),
+    //   Const::Nat(n) =>  Const::Nat(*n),
+    //   Const::Str(s) =>  Const::Str(s.clone()),
+    // }
+  }
+}
+/*pub enum SpecConst {
   Atom (String),
   Nat (u64),            // waiting on conversion from vec to seq issue to be resolved
   Str (String),
-  List (Seq<SpecConst>)
+  //List (Seq<SpecConst>)
   } */
 
 /* impl DeepView for Const {    // attmept at forcing vec units into seq
@@ -83,15 +88,23 @@ verus! {
 
 //putting on hold temporarily
   /* fn merge_subst(s : Subst, t : Subst) -> (res: Result<Subst, ()>)
-    ensures res.is_Ok() ==> (
+    /* ensures res.is_Ok() ==> (
               compatible_subst(s, t),
-              res.val.Keys == s[v] + t[v],            //clean up code
+              res.val.Keys == s.Keys + t.Keys,            //clean up code
               (forall |v : Const| res.val[v] == s[v]),
               (forall |v : Const| res.val[v] == t[v]),
-   ) 
+    ) */
   {
     if compatible_subst(s, t){
-       Ok(s+t)  // figure out 
+      let mut u = StringHashMap::<Const>::new();
+      //need to find method to iterate through s and t
+      for (key, val) in s.iter() {
+        u.insert(key, val);
+      }
+      for (key, val) in t.iter() {
+        u.insert(key, val);
+      } 
+       Ok(s + t)  // figure out 
        // update do iteration and add all key-value pairs into single hashmap and run Ok
        //on the joint set
       
@@ -132,7 +145,7 @@ verus! {
  
  impl Term {
  //predicate complete_subst rewritten as a spec fn that returns bool
-  spec fn complete_subst(self, s: Subst) -> bool
+  pub open spec fn complete_subst(self, s: Subst) -> bool
   {
     match self {
       Term::Var(v) => s@.contains_key(v@), //look for hashmap function v in s or key in map
@@ -140,28 +153,40 @@ verus! {
     }
   } 
   //predicate concrete rewritten as a spec fn that returns bool
-  spec fn concrete(self) -> bool
+  pub open spec fn concrete(self) -> bool
   {
-    match self {
-      Term::Const(_) => true,
-      _ => false,
-    }
+    self is Const
+    // match self {
+    //   Term::Const(_) => true,
+    //   _ => false,
+    // }
       //find function for Const?
   } 
 
  //exec fn subst
-  /* fn subst(self, s: Subst) -> (res: Term)
+ fn subst(self, s: Subst) -> (res: Term)
   requires self.complete_subst(s)
   ensures res.concrete()
  {
   match self{
-      Term::Var(v) => Term::Const(s[v]),
+      //Term::Var(v) => Term::Const(s@[v@]),
+      Term::Var(v) => {
+        let u_option = s.get(v.as_str());
+        Term::Const(u_option.unwrap().clone())
+        /* if let Some(u) = s.get(v.as_str()){
+        Term::Const(*u)
+        }
+        else{
+
+        } */
+      },
       Term::Const(_) => self,
   }
- } */
-} 
-  fn main(){
+  } 
 
+ }
+  fn main(){
+    
   }
 
 }  
