@@ -70,7 +70,7 @@ impl Const {
 // spec fn in place of predicate for compatible substitution
   spec fn compatible_subst(s : Subst, t : Subst) -> bool
   {
-    forall|v: String| s@[v@] == t@[v@]
+    forall|v: String| (#[trigger] s@[v@]) == (#[trigger] t@[v@])
   }
 
 //DAFNY Code
@@ -145,6 +145,16 @@ impl Const {
  
  impl Term {
  //predicate complete_subst rewritten as a spec fn that returns bool
+ fn clone (&self) -> (res: Self)
+ ensures self == res
+ {
+ 
+   match self {
+     Term::Var(s) => Term::Var(s.clone()),
+     Term::Const(c) => Term::Const(c.clone()) ,
+   }
+}
+
   pub open spec fn complete_subst(self, s: Subst) -> bool
   {
     match self {
@@ -164,8 +174,8 @@ impl Const {
   } 
 
  //exec fn subst
- fn subst(self, s: Subst) -> (res: Term)
-  requires self.complete_subst(s)
+ fn subst(self, s: &Subst) -> (res: Term)
+  requires self.complete_subst(*s)
   ensures res.concrete()
  {
   match self{
@@ -187,20 +197,49 @@ impl Const {
  }
 
 pub enum Prop {
-  App(head: String, args: Vec<Term>),
-  Eq(l: Term, r: Term),
+  App(String, Vec<Term>),
+  Eq(Term, Term),
   //BuiltinOp(b: Builtin, args: Vec<Term>),
   // will add in BuiltinOp when Builtin is implemented
 }
 impl Prop {
-  spec fn complete_subst(self, s: Subst) -> bool
+  pub open spec fn complete_subst(self, s: &Subst) -> bool
   {
     match self {
-      Prop::App(head, args) => forall i :: 0 <= i < |args| ==> args[i].concrete(),
-      Prop::Eq(x, y) => x.concrete() && y.concrete(),
-      Prop::BuiltinOp(_, args) => forall i :: 0 <= i < |args| ==> args[i].concrete(),
+      Prop::App(head, args) => forall|i : int| #![auto] 0 <= i < args.len() ==> args[i].complete_subst(*s),
+      Prop::Eq(x, y) => x.complete_subst(*s) && y.complete_subst(*s)
+      //Prop::BuiltinOp(_, args) => forall| i : Subst| 0 <= i as i32 < args.len() ==> args[i as i32].complete_subst(),
     }
   }
+  pub open spec fn concrete(self) -> bool {
+    match self {
+    Prop::App(head, args) => forall| i : int| #![auto] 0 <= i < args.len() ==> args[i].concrete(),
+    Prop::Eq(x, y) => x.concrete() && y.concrete(),
+    //Prop::BuiltinOp(_, args) => forall| i : int| 0 <= i < args.len() ==> args[i].concrete()
+    }
+  }
+
+  fn subst(self, s: &Subst) -> (res: Prop)
+  requires self.complete_subst(s)
+  ensures res.concrete(),
+  {
+  match self
+  {
+    Prop::App(h, args) => {
+      let mut v = Vec::<Term>::new();
+      for i in 0..args.len()
+      invariant 0 <= i <= args.len(),
+                v.len() == i,
+                forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].complete_subst(*s),
+                forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+      {
+        v.push(args[i].clone().subst(s));
+      }
+      Prop::App(h, v)
+    }
+    Prop::Eq(x, y) => Prop::Eq(x.subst(s), y.subst(s))
+  }
+}
 }
 
 fn main(){
