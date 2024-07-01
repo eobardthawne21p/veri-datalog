@@ -19,15 +19,15 @@ verus! {
 
 impl Const {
   fn clone (&self) -> (res: Self)
-  ensures self == res
-  {
-    Const::Nat(3u64)
-    // match self {
-    //   Const::Atom(s) => Const::Atom(s.clone()),
-    //   Const::Nat(n) =>  Const::Nat(*n),
-    //   Const::Str(s) =>  Const::Str(s.clone()),
-    // }
-  }
+    ensures self == res
+    {
+    
+      match self {
+        Const::Atom(s) => Const::Atom(s.clone()),
+        Const::Nat(n) =>  Const::Nat(*n),
+        Const::Str(s) =>  Const::Str(s.clone()),
+      }
+   }
 }
 /*pub enum SpecConst {
   Atom (String),
@@ -185,9 +185,27 @@ impl Const {
   } 
 
  }
-  fn main(){
-    
+
+pub enum Prop {
+  App(head: String, args: Vec<Term>),
+  Eq(l: Term, r: Term),
+  //BuiltinOp(b: Builtin, args: Vec<Term>),
+  // will add in BuiltinOp when Builtin is implemented
+}
+impl Prop {
+  spec fn complete_subst(self, s: Subst) -> bool
+  {
+    match self {
+      Prop::App(head, args) => forall i :: 0 <= i < |args| ==> args[i].concrete(),
+      Prop::Eq(x, y) => x.concrete() && y.concrete(),
+      Prop::BuiltinOp(_, args) => forall i :: 0 <= i < |args| ==> args[i].concrete(),
+    }
   }
+}
+
+fn main(){
+    
+}
 
 }  
 
