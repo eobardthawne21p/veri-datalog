@@ -139,7 +139,7 @@ impl Const {
  //Verus code for Term
  // enumeration of data types in type Term (Const and Strings)
  pub enum Term {
-  Const(Const),
+  Const (Const),
   Var(String),
  }
  
@@ -246,7 +246,8 @@ impl Prop {
     self is App
   }
 
-  /*spec fn valid(self) -> bool 
+  spec fn valid(self,) -> bool 
+  
   {
     if self.symbolic() == true
     {
@@ -259,14 +260,18 @@ impl Prop {
     else
     {
       match self {
-        Prop::Eq(x, y) => Term::Const(Const(x.clone())) == Term::Const(Const(y.clone())),
+        Prop::Eq(x, y) => x == y,
         Prop::App(s, v) => false,
         /* Prop::BuiltinOp(b, args) => (
           // will implement when we do buitlins
         ) */
       }
     }
-  }*/
+  } 
+}
+
+pub enum Rule {
+  Rule(Prop, Vec<Prop>, u64),
 }
 
 fn main(){
