@@ -240,6 +240,33 @@ impl Prop {
     Prop::Eq(x, y) => Prop::Eq(x.subst(s), y.subst(s))
   }
 }
+
+  spec fn symbolic(self) -> bool
+  {
+    self is App
+  }
+
+  /*spec fn valid(self) -> bool 
+  {
+    if self.symbolic() == true
+    {
+      false
+    }
+    else if self.concrete() == false
+    {
+      false
+    }
+    else
+    {
+      match self {
+        Prop::Eq(x, y) => Term::Const(Const(x.clone())) == Term::Const(Const(y.clone())),
+        Prop::App(s, v) => false,
+        /* Prop::BuiltinOp(b, args) => (
+          // will implement when we do buitlins
+        ) */
+      }
+    }
+  }*/
 }
 
 fn main(){
