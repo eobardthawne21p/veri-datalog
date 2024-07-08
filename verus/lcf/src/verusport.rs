@@ -246,8 +246,7 @@ impl Prop {
     self is App
   }
 
-  spec fn valid(self,) -> bool 
-  
+  spec fn valid(self) -> bool 
   {
     if self.symbolic() == true
     {
@@ -257,10 +256,21 @@ impl Prop {
     {
       false
     }
-    else
+    else 
     {
       match self {
-        Prop::Eq(x, y) => x == y,
+        Prop::Eq(x, y) => match (x,y) {
+          (Term::Const(x), Term::Const(y)) => if x == y {
+            true
+          }
+          else
+          {
+            false
+          },
+          (Term::Var(x), Term::Var(y)) => false,
+          (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
+
+        }
         Prop::App(s, v) => false,
         /* Prop::BuiltinOp(b, args) => (
           // will implement when we do buitlins
@@ -270,8 +280,10 @@ impl Prop {
   } 
 }
 
-pub enum Rule {
-  Rule(Prop, Vec<Prop>, u64),
+pub struct Rule {
+  head : Prop,
+  body : Vec<Prop>,
+  id : u64,
 }
 
 fn main(){
