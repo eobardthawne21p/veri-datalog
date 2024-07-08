@@ -62,11 +62,7 @@ impl Const {
   type Subst = StringHashMap<Const>;
   
 
-  /* 
-  predicate compatible_subst(s : Subst, t : Subst) {
-    forall v :: v in s.Keys && v in t.Keys ==> s[v] == t[v]
-  }
-*/
+
 // spec fn in place of predicate for compatible substitution
   spec fn compatible_subst(s : Subst, t : Subst) -> bool
   {
@@ -115,27 +111,6 @@ impl Const {
     }
   }  */
 
-/* 
-//Dafny code for Term
-  datatype Term = Const(val : Const) | Var(v : string) {
-    predicate complete_subst(s : Subst) {
-      match this
-      case Var(v) => v in s
-      case Const(_) => true
-    }
-    predicate concrete() {
-      Const?
-    }
-    function subst(s : Subst) : (res : Term)
-      requires complete_subst(s)
-      ensures res.concrete()
-    {
-      match this
-      case Var(v) => Const(s[v])
-      case Const(_) => this
-    }
-  } */
-
  //Verus code for Term
  // enumeration of data types in type Term (Const and Strings)
  pub enum Term {
@@ -144,17 +119,16 @@ impl Const {
  }
  
  impl Term {
- //predicate complete_subst rewritten as a spec fn that returns bool
+ // clone fn to be used in operations later
  fn clone (&self) -> (res: Self)
  ensures self == res
  {
- 
    match self {
      Term::Var(s) => Term::Var(s.clone()),
      Term::Const(c) => Term::Const(c.clone()) ,
    }
 }
-
+//predicate complete_subst rewritten as a spec fn that returns bool
   pub open spec fn complete_subst(self, s: Subst) -> bool
   {
     match self {
@@ -281,10 +255,22 @@ impl Prop {
 }
 
 pub struct Rule {
-  head : Prop,
-  body : Vec<Prop>,
-  id : u64,
+  pub head : Prop,
+  pub body : Vec<Prop>,
+  pub id : u64,
 }
+
+impl Rule {
+  pub open spec fn complete_subst(self, s: &Subst) -> bool {
+    self.head.complete_subst(s) && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].complete_subst(s)
+  }
+
+  pub open spec fn concrete(self) -> bool {
+    self.head.concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].concrete()
+  }
+
+}
+
 
 fn main(){
     
