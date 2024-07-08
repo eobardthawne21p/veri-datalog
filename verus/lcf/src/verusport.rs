@@ -283,11 +283,11 @@ impl Rule {
     {
       v.push(self.body[i].subst(s));
     }
-    let result = Rule {
-      head : self.head.subst(s),
-      body : v,
-      id : self.id,
-    };
+      let result = Rule {
+        head : self.head.subst(s),
+        body : v,
+        id : self.id,
+      };
     result
   } 
 
@@ -296,6 +296,12 @@ impl Rule {
  }
 }
 
+// Do Ruleset after meeting
+
+pub enum Proof {
+  Pstep (Rule, Subst, Vec<Proof>),
+  QED (Prop),
+}
 
 fn main(){
     
