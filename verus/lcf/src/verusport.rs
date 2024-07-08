@@ -177,6 +177,7 @@ pub enum Prop {
   // will add in BuiltinOp when Builtin is implemented
 }
 impl Prop {
+
   pub open spec fn complete_subst(self, s: &Subst) -> bool
   {
     match self {
@@ -193,7 +194,7 @@ impl Prop {
     }
   }
 
-  fn subst(self, s: &Subst) -> (res: Prop)
+  fn subst(&self, s: &Subst) -> (res: Prop)
   requires self.complete_subst(s)
   ensures res.concrete(),
   {
@@ -209,13 +210,13 @@ impl Prop {
       {
         v.push(args[i].clone().subst(s));
       }
-      Prop::App(h, v)
+      Prop::App(h.clone(), v)
     }
-    Prop::Eq(x, y) => Prop::Eq(x.subst(s), y.subst(s))
+    Prop::Eq(x, y) => Prop::Eq(x.clone().subst(s), y.clone().subst(s))
   }
 }
 
-  spec fn symbolic(self) -> bool
+  pub open spec fn symbolic(self) -> bool
   {
     self is App
   }
@@ -269,6 +270,30 @@ impl Rule {
     self.head.concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].concrete()
   }
 
+  fn subst(&self, s : &Subst) -> (res : Rule) 
+  requires self.complete_subst(s)
+  ensures res.concrete()
+  {
+    let mut v = Vec::<Prop>::new();
+    for i in 0..self.body.len()
+    invariant 0 <= i <= self.body.len(),
+    v.len() == i,
+      forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].complete_subst(s),
+      forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+    {
+      v.push(self.body[i].subst(s));
+    }
+    let result = Rule {
+      head : self.head.subst(s),
+      body : v,
+      id : self.id,
+    };
+    result
+  } 
+
+ pub open spec fn wf(self) -> bool {
+  self.head.symbolic()
+ }
 }
 
 
