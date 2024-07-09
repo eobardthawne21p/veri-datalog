@@ -17,8 +17,20 @@ verus! {
     //List (Vec<Const>), // vector???
     } 
 
+    impl Clone for Const {
+      fn clone(&self) -> (res: Self) 
+        ensures self == res 
+      { 
+        match self {
+          Const::Atom(s) => Const::Atom(s.clone()),
+          Const::Nat(n) =>  Const::Nat(*n),
+          Const::Str(s) =>  Const::Str(s.clone()),
+        }
+      }
+    }
+
 impl Const {
-  fn clone (&self) -> (res: Self)
+  /* fn clone (&self) -> (res: Self)
     ensures self == res
     {
     
@@ -27,7 +39,7 @@ impl Const {
         Const::Nat(n) =>  Const::Nat(*n),
         Const::Str(s) =>  Const::Str(s.clone()),
       }
-   }
+   } */
 }
 /*pub enum SpecConst {
   Atom (String),
@@ -117,17 +129,28 @@ impl Const {
   Const (Const),
   Var(String),
  }
+
+ impl Clone for Term {
+  fn clone(&self) -> (res: Self) 
+    ensures self == res 
+  { 
+    match self {
+      Term::Var(s) => Term::Var(s.clone()),
+      Term::Const(c) => Term::Const(c.clone()) ,
+    }
+  }
+}
  
  impl Term {
  // clone fn to be used in operations later
- fn clone (&self) -> (res: Self)
+ /* pub fn clone (&self) -> (res: Self)
  ensures self == res
  {
    match self {
      Term::Var(s) => Term::Var(s.clone()),
      Term::Const(c) => Term::Const(c.clone()) ,
    }
-}
+} */ 
 //predicate complete_subst rewritten as a spec fn that returns bool
   pub open spec fn complete_subst(self, s: Subst) -> bool
   {
@@ -176,7 +199,19 @@ pub enum Prop {
   //BuiltinOp(b: Builtin, args: Vec<Term>),
   // will add in BuiltinOp when Builtin is implemented
 }
+impl Clone for Prop {
+  fn clone(&self) -> (res: Self) 
+    ensures self == res 
+  { 
+    match self {
+      Prop::App(s, v) => Prop::App(s.clone(), v.clone()),
+      Prop::Eq(t, e) =>  Prop::Eq(t.clone(), e.clone()),
+    }
+  }
+}
+
 impl Prop {
+
 
   pub open spec fn complete_subst(self, s: &Subst) -> bool
   {
@@ -297,11 +332,31 @@ impl Rule {
 }
 
 // Do Ruleset after meeting
+pub struct RuleSet {
+  // Don't know how to handle forall statement
+  pub rs : Vec<Rule>
+}
+ impl RuleSet {
+  pub open spec fn wf(self) -> bool {
+    forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
+  } 
+}
 
 pub enum Proof {
   Pstep (Rule, Subst, Vec<Proof>),
   QED (Prop),
 }
+impl Proof {
+  fn head(&self) -> Prop
+  requires self matches Proof::Pstep(rule,s,branches) ==> rule.complete_subst(s),
+  {
+    match self {
+      Proof::Pstep(rule, s, branches) => rule.subst(s).head,
+      Proof::QED(p) => p.clone(),
+    }
+  } 
+ 
+} 
 
 fn main(){
     
