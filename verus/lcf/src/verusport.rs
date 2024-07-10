@@ -256,7 +256,7 @@ impl Prop {
     self is App
   }
 
-  spec fn valid(self) -> bool 
+  pub open spec fn valid(self) -> bool 
   {
     if self.symbolic() == true
     {
@@ -305,7 +305,7 @@ impl Rule {
     self.head.concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].concrete()
   }
 
-  fn subst(&self, s : &Subst) -> (res : Rule) 
+  pub fn subst(&self, s : &Subst) -> (res : Rule) 
   requires self.complete_subst(s)
   ensures res.concrete()
   {
@@ -333,13 +333,17 @@ impl Rule {
 
 // Do Ruleset after meeting
 pub struct RuleSet {
-  // Don't know how to handle forall statement
   pub rs : Vec<Rule>
 }
  impl RuleSet {
   pub open spec fn wf(self) -> bool {
     forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
   } 
+
+  pub open spec fn contains(self, input : Rule) -> bool {
+    self.contains(input)
+  }
+
 }
 
 pub enum Proof {
@@ -347,7 +351,7 @@ pub enum Proof {
   QED (Prop),
 }
 impl Proof {
-  fn head(&self) -> Prop
+  pub fn head(&self) -> Prop
   requires self matches Proof::Pstep(rule,s,branches) ==> rule.complete_subst(s),
   {
     match self {
@@ -355,6 +359,17 @@ impl Proof {
       Proof::QED(p) => p.clone(),
     }
   } 
+
+  pub open spec fn valid(&self, rule_set: RuleSet) -> bool {
+    match self {
+      Proof::QED(p) => p.concrete() && !p.symbolic() && p.valid(),
+      Proof::Pstep(rule, s, branches) => rule_set.contains(*rule) &&
+      rule.complete_subst(s) && rule.body.len() == branches.len() /*  && {
+      let rule1 = rule.subst(s); forall |i : int| 0 <= i < rule1.body.len() ==>
+      branches[i].valid(rule_set) &&
+      rule1.body[i] == branches[i].head()} */
+    }
+  }
  
 } 
 
