@@ -17,6 +17,17 @@ verus! {
     //List (Vec<Const>), // vector???
     } 
 
+    impl PartialEq for Const {
+      fn eq(&self, other : &Self) -> bool
+      {
+       match (self, other) {
+        (Const::Atom(s), Const::Atom(t)) => s == t,
+        (Const::Nat(u), Const::Nat(v)) => u == v,
+        (Const::Str(s), Const::Str(t)) => s == t,
+       }
+      }
+    }
+
     impl Clone for Const {
       fn clone(&self) -> (res: Self) 
         ensures self == res 
@@ -140,17 +151,19 @@ impl Const {
     }
   }
 }
+
+impl PartialEq for Term {
+  fn eq(&self, other : &Self) -> bool
+  {
+    match (self, other) {
+      (Term::Const(c), Term::Const(d)) => c == d,
+      (Term::Var(s), Term::Var(t)) => s == t,
+    }
+  }
+}
  
  impl Term {
- // clone fn to be used in operations later
- /* pub fn clone (&self) -> (res: Self)
- ensures self == res
- {
-   match self {
-     Term::Var(s) => Term::Var(s.clone()),
-     Term::Const(c) => Term::Const(c.clone()) ,
-   }
-} */ 
+
 //predicate complete_subst rewritten as a spec fn that returns bool
   pub open spec fn complete_subst(self, s: Subst) -> bool
   {
@@ -171,7 +184,7 @@ impl Const {
   } 
 
  //exec fn subst
- fn subst(self, s: &Subst) -> (res: Term)
+ pub fn subst(self, s: &Subst) -> (res: Term)
   requires self.complete_subst(*s)
   ensures res.concrete()
  {
@@ -191,6 +204,26 @@ impl Const {
   }
   } 
 
+  /* pub open spec fn SpecSubst(self, s: &Subst) -> (res: Term)
+  requires self.complete_subst(*s)
+  ensures res.concrete()
+ {
+  match self{
+      //Term::Var(v) => Term::Const(s@[v@]),
+      Term::Var(v) => {
+        let u_option = s.get(v.as_str());
+        Term::Const(u_option.unwrap().clone())
+        /* if let Some(u) = s.get(v.as_str()){
+        Term::Const(*u)
+        }
+        else{
+
+        } */
+      },
+      Term::Const(_) => self,
+  }
+  } */
+
  }
 
 pub enum Prop {
@@ -200,7 +233,7 @@ pub enum Prop {
   // will add in BuiltinOp when Builtin is implemented
 }
 impl Clone for Prop {
-  fn clone(&self) -> (res: Self) 
+  #[verifier::external_body] fn clone(&self) -> (res: Self) 
     ensures self == res 
   { 
     match self {
@@ -209,9 +242,17 @@ impl Clone for Prop {
     }
   }
 }
+impl PartialEq for Prop {
+  fn eq(&self, other : &Self) -> bool
+  {
+    match (self, other) {
+      (Prop::App(s, v), Prop::App(t, w)) => s == t && v == w,
+      (Prop::Eq(a, b), Prop::Eq(c, d)) => a == c && b == d,
+    }
+  }
+} 
 
 impl Prop {
-
 
   pub open spec fn complete_subst(self, s: &Subst) -> bool
   {
@@ -251,6 +292,28 @@ impl Prop {
   }
 }
 
+/* pub open fn SpecSubst(&self, s: &Subst) -> (res: Prop)
+  requires self.complete_subst(s)
+  ensures res.concrete(),
+  {
+  match self
+  {
+    Prop::App(h, args) => {
+      let mut v = Vec::<Term>::new();
+      for i in 0..args.len()
+      invariant 0 <= i <= args.len(),
+                v.len() == i,
+                forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].complete_subst(*s),
+                forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+      {
+        v.push(args[i].clone().subst(s));
+      }
+      Prop::App(h.clone(), v)
+    }
+    Prop::Eq(x, y) => Prop::Eq(x.clone().subst(s), y.clone().subst(s))
+  }
+} */
+
   pub open spec fn symbolic(self) -> bool
   {
     self is App
@@ -270,13 +333,7 @@ impl Prop {
     {
       match self {
         Prop::Eq(x, y) => match (x,y) {
-          (Term::Const(x), Term::Const(y)) => if x == y {
-            true
-          }
-          else
-          {
-            false
-          },
+          (Term::Const(x), Term::Const(y)) =>  x == y,
           (Term::Var(x), Term::Var(y)) => false,
           (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
 
@@ -294,6 +351,13 @@ pub struct Rule {
   pub head : Prop,
   pub body : Vec<Prop>,
   pub id : u64,
+}
+
+impl PartialEq for Rule {
+  fn eq(&self, other : &Self) -> bool
+  {
+    self.head == other.head && self.body == other.body && self.id == other.id
+  }
 }
 
 impl Rule {
@@ -326,6 +390,27 @@ impl Rule {
     result
   } 
 
+  /* pub open spec fn SpecSubst(&self, s : &Subst) -> (res : Rule) 
+  requires self.complete_subst(s)
+  ensures res.concrete()
+  {
+    let mut v = Vec::<Prop>::new();
+    for i in 0..self.body.len()
+    /invariant 0 <= i <= self.body.len(),
+    v.len() == i,
+      forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].complete_subst(s),
+      forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+    {
+      v.push(self.body[i].subst(s));
+    }
+      let result = Rule {
+        head : self.head.subst(s),
+        body : v,
+        id : self.id,
+      };
+    result
+  } */
+
  pub open spec fn wf(self) -> bool {
   self.head.symbolic()
  }
@@ -335,13 +420,15 @@ impl Rule {
 pub struct RuleSet {
   pub rs : Vec<Rule>
 }
+
  impl RuleSet {
   pub open spec fn wf(self) -> bool {
     forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
   } 
 
-  pub open spec fn contains(self, input : Rule) -> bool {
-    self.contains(input)
+  pub open spec fn contains(self, input : Rule) -> bool 
+  {
+    self.rs.contains(&input)
   }
 
 }
@@ -350,6 +437,17 @@ pub enum Proof {
   Pstep (Rule, Subst, Vec<Proof>),
   QED (Prop),
 }
+
+impl PartialEq for Proof {
+  fn eq(&self, other : &Self) -> bool
+  {
+    match (self, other){
+      (Proof::Pstep(a, b, c), Proof::Pstep(d, e, f)) => a == d && b == e && c == f,
+      (Proof::QED(p), Proof::QED(q)) => p == q ,
+    }
+  } 
+}
+
 impl Proof {
   pub fn head(&self) -> Prop
   requires self matches Proof::Pstep(rule,s,branches) ==> rule.complete_subst(s),
@@ -367,7 +465,7 @@ impl Proof {
       rule.complete_subst(s) && rule.body.len() == branches.len() /*  && {
       let rule1 = rule.subst(s); forall |i : int| 0 <= i < rule1.body.len() ==>
       branches[i].valid(rule_set) &&
-      rule1.body[i] == branches[i].head()} */
+      rule1.body[i] == branches[i].head()}  */
     }
   }
  

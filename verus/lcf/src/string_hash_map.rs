@@ -31,6 +31,12 @@ impl<Value> View for StringHashMap<Value> {
     closed spec fn view(&self) -> Self::V;
 }
 
+impl<Value:PartialEq> PartialEq for StringHashMap<Value> {
+    fn eq(&self, other :&Self) -> bool{
+        self.m == other.m
+    } 
+}
+
 impl<Value> StringHashMap<Value> {
     #[verifier::external_body]
     pub fn new() -> (result: Self)
