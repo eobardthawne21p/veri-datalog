@@ -308,13 +308,9 @@ verus! {
 
     pub open spec fn valid(self) -> bool 
     {
-      if self.symbolic() == true
+      if self.symbolic() == true || self.concrete() == false
       {
         false
-      }
-      else if self.concrete() == false
-      {
-      false
       }
       else 
       {
