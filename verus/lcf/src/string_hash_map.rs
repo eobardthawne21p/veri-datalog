@@ -129,7 +129,9 @@ verus!{
 fn test()
 {
     let mut m = StringHashMap::<i8>::new();
+    let mut n = StringHashMap::<i8>::new();
     assert(m@ == Map::<Seq<char>, i8>::empty());
+    assert(n@ == Map::<Seq<char>, i8>::empty());
 
     let three: String = "three".to_string();
     let six: String = "six".to_string();
