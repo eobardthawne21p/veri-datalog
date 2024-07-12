@@ -13,7 +13,8 @@ verus! {
   } 
 
   impl PartialEq for Const {
-    fn eq(&self, other : &Self) -> bool
+    fn eq(&self, other : &Self) -> (res: bool)
+      ensures res <==> self.deep_view() == other.deep_view()
     {
       match (self, other) {
       (Const::Atom(s), Const::Atom(t)) => s == t,
@@ -31,7 +32,7 @@ verus! {
 
   impl Clone for Const {
     fn clone(&self) -> (res: Self) 
-      ensures self == res 
+      ensures self.deep_view() == res.deep_view()
     { 
       match self {
         Const::Atom(s) => Const::Atom(s.clone()),
@@ -53,14 +54,14 @@ verus! {
       }
    } */
   }
-/*pub enum SpecConst {
+pub enum SpecConst {
   Atom (String),
   Nat (u64),            // waiting on conversion from vec to seq issue to be resolved
   Str (String),
   //List (Seq<SpecConst>)
-  } */
+  }
 
-/* impl DeepView for Const {    // attempt at forcing vec units into seq
+impl DeepView for Const {    // attempt at forcing vec units into seq
   type V = SpecConst;
 
   open spec fn deep_view(&self) -> Self::V {
@@ -68,7 +69,7 @@ verus! {
       Const::Atom(s) => SpecConst::Atom(*s), 
       Const::Nat(n) => SpecConst::Nat(*n),
       Const::Str(s) => SpecConst::Str(*s),
-      Const::List(vec) => SpecConst::List(vec.deep_view()),
+      // Const::List(vec) => SpecConst::List(vec.deep_view()),
         
         /* let mut seq = Seq::<SpecConst>::empty();
         for i in 0..vec.len() {
@@ -80,14 +81,16 @@ verus! {
       
     }
   }
-} */
+}
 
   
   type Subst = StringHashMap<Const>;
-  
+  type SpecSubst = Map<Seq<char>, SpecConst>;
+
+
   spec fn compatible_subst(s : Subst, t : Subst) -> bool
   {
-    forall|v: String| (#[trigger] s@[v@]) == (#[trigger] t@[v@])
+    forall|v: String| (#[trigger] s.deep_view()[v@]) == (#[trigger] t.deep_view()[v@])
   }
 
   //DAFNY Code
@@ -137,9 +140,25 @@ verus! {
     Var(String),
   }
 
+  pub enum SpecTerm {
+    Const (SpecConst),
+    Var(Seq<char>),
+  }
+
+  impl DeepView for Term {
+    type V = SpecTerm;
+
+    open spec fn deep_view(&self) -> Self::V {
+      match self {
+        Term::Const(c) => SpecTerm::Const(c.deep_view()),
+        Term::Var(s) => SpecTerm::Var(s.view()),
+      }
+    }
+  }
+
   impl Clone for Term {
     fn clone(&self) -> (res: Self) 
-    ensures self == res 
+    ensures self.deep_view() == res.deep_view()
     { 
       match self {
         Term::Var(s) => Term::Var(s.clone()),
@@ -149,7 +168,8 @@ verus! {
   }
 
   impl PartialEq for Term {
-    fn eq(&self, other : &Self) -> bool
+    fn eq(&self, other : &Self) -> (res: bool)
+      ensures res <==> self.deep_view() == other.deep_view()
     {
       match (self, other) {
         (Term::Const(c), Term::Const(d)) => c == d,
@@ -215,6 +235,22 @@ verus! {
     Eq(Term, Term),
     //BuiltinOp(b: Builtin, args: Vec<Term>),
     // will add in BuiltinOp when Builtin is implemented
+  }
+
+  pub enum SpecProp {
+    App(Seq<char>, Seq<SpecTerm>),
+    Eq(SpecTerm, SpecTerm),
+  }
+
+  impl DeepView for Prop {
+    type V = SpecProp;
+
+    open spec fn deep_view(&self) -> Self::V {
+      match self {
+        Prop::App(s, v) => SpecProp::App(s.view(), v.deep_view()),
+        Prop::Eq(t, e) => SpecProp::Eq(t.deep_view(), e.deep_view()),
+      }
+    }
   }
 
   impl Clone for Prop {
@@ -336,6 +372,24 @@ verus! {
     pub id : u64,
   }
 
+  pub struct SpecRule {
+    pub head : SpecProp,
+    pub body : Seq<SpecProp>,
+    pub id : u64,
+  }
+
+  impl DeepView for Rule {
+    type V = SpecRule;
+
+    open spec fn deep_view(&self) -> Self::V {
+      SpecRule {
+        head : self.head.deep_view(),
+        body : self.body.deep_view(),
+        id : self.id,
+      }
+    }
+  }
+
   impl PartialEq for Rule {
     fn eq(&self, other : &Self) -> bool
     {
@@ -403,6 +457,20 @@ verus! {
     pub rs : Vec<Rule>
   }
 
+  pub struct SpecRuleSet {
+    pub rs : Seq<SpecRule>
+  }
+
+  impl DeepView for RuleSet {
+    type V = SpecRuleSet;
+
+    open spec fn deep_view(&self) -> Self::V {
+      SpecRuleSet {
+        rs : self.rs.deep_view(),
+      }
+    }
+  }
+
   impl RuleSet {
     pub open spec fn wf(self) -> bool {
       forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
@@ -418,6 +486,18 @@ verus! {
   pub enum Proof {
     Pstep (Rule, Subst, Vec<Proof>),
     QED (Prop),
+  }
+
+  pub enum SpecProof {
+    Pstep (SpecRule, SpecSubst, Seq<SpecProof>),
+    QED (SpecProp),
+  }
+
+  impl DeepView for Proof {
+    type V = SpecProof;
+
+    // TODO(pratap): Fix this based on https://github.com/verus-lang/verus/issues/1222
+    closed spec fn deep_view(&self) -> Self::V;
   }
 
   impl PartialEq for Proof {
