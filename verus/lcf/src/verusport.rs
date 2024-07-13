@@ -475,11 +475,38 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     pub open spec fn wf(self) -> bool {
       forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
     } 
-
+    
   /* pub open spec fn contains(self, input : Rule) -> bool 
-  {
-    self.rs.contains(&input)
-  } */
+    decreases self.rs.len(),
+    {
+      //first attempt 
+
+      for i in 0..self.rs.len() {
+        if (self.rs[i as int] == input)
+        {
+          true
+        }
+      }
+      false
+    }
+
+      // second attempt
+
+      if self.rs.len() == 0
+      {
+        false
+      }
+      else
+      {
+        if (self.rs[self.rs.len() - 1]) == input {
+          true
+        }
+        else {
+          self.rs.pop();
+          self.SpecContains(input)
+       }
+      }
+    } */
 
   } 
 
