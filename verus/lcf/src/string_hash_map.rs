@@ -31,6 +31,19 @@ impl<Value> View for StringHashMap<Value> {
     closed spec fn view(&self) -> Self::V;
 }
 
+impl<Value> DeepView for StringHashMap<Value> 
+    where Value: DeepView
+{
+    type V = Map<Seq<char>, <Value as DeepView>::V>;
+
+    open spec fn deep_view(&self) -> Self::V {
+        self
+            .view()
+            .map_values(|v: Value| v.deep_view())
+    }
+}
+
+
 impl<Value:PartialEq> PartialEq for StringHashMap<Value> {
     fn eq(&self, other :&Self) -> bool{
         self.m == other.m
@@ -165,5 +178,4 @@ fn test()
 }
 
 }
-
 
