@@ -128,7 +128,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     pub open spec fn spec_complete_subst(self, s: Subst) -> bool
     {
       match self {
-        SpecTerm::Var(v) => s@.contains_key(v@), 
+        SpecTerm::Var(v) => s@.contains_key(v), 
         SpecTerm::Const(_) => true,
       }
     } 
@@ -163,8 +163,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
 
   impl Term {
     pub fn subst(self, s: &Subst) -> (res: Term)
-    requires self.spec_complete_subst(*s).deep_view()
-    ensures res.spec_concrete().deep_view()
+    requires self.deep_view().spec_complete_subst(*s)
+    ensures res.deep_view().spec_concrete()
     {
       match self {
         Term::Var(v) => {
