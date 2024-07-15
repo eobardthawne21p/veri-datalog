@@ -338,43 +338,27 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl PartialEq for Rule {
-    fn eq(&self, other : &Self) -> bool
+    fn eq(&self, other : &Self) -> (res: bool) 
+    ensures res <==> self.deep_view() == other.deep_view()
     {
       self.head == other.head && self.body == other.body && self.id == other.id
     }
   }
 
-  impl Rule {
-    pub open spec fn complete_subst(self, s: &Subst) -> bool {
-      self.head.deep_view().spec_complete_subst(s) && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].deep_view().spec_complete_subst(s)
+  impl SpecRule {
+    pub open spec fn spec_complete_subst(self, s: &Subst) -> bool {
+      self.head.spec_complete_subst(s) && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_complete_subst(s)
     }
 
-    pub open spec fn concrete(self) -> bool {
-      self.head.deep_view().spec_concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].deep_view().spec_concrete()
+    pub open spec fn spec_concrete(self) -> bool {
+      self.head.spec_concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_concrete()
     }
 
-    pub fn subst(&self, s : &Subst) -> (res : Rule) 
-    requires self.complete_subst(s)
-    ensures res.concrete()
-    {
-      let mut v = Vec::<Prop>::new();
-      for i in 0..self.body.len()
-      invariant 0 <= i <= self.body.len(),
-      v.len() == i,
-        forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].deep_view().spec_complete_subst(s),
-        forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
-      {
-        v.push(self.body[i].subst(s));
-      }
-        let result = Rule {
-          head : self.head.subst(s),
-          body : v,
-          id : self.id,
-        };
-      result
-    } 
+    pub open spec fn spec_wf(self) -> bool {
+      self.head.spec_symbolic()
+    }
 
-  /* pub open spec fn SpecSubst(&self, s : &Subst) -> (res : Rule) 
+    /* pub open spec fn SpecSubst(&self, s : &Subst) -> (res : Rule) 
   recommends self.complete_subst(s)
   
   {
@@ -394,10 +378,29 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       };
     result
   } */
-
-    pub open spec fn wf(self) -> bool {
-    self.head.deep_view().spec_symbolic()
   }
+
+  impl Rule {
+    pub fn subst(&self, s : &Subst) -> (res : Rule) 
+    requires self.deep_view().spec_complete_subst(s)
+    ensures res.deep_view().spec_concrete()
+    {
+      let mut v = Vec::<Prop>::new();
+      for i in 0..self.body.len()
+      invariant 0 <= i <= self.body.len(),
+      v.len() == i,
+        forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].deep_view().spec_complete_subst(s),
+        forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
+      {
+        v.push(self.body[i].subst(s));
+      }
+        let result = Rule {
+          head : self.head.subst(s),
+          body : v,
+          id : self.id,
+        };
+      result
+    } 
   }
 
   pub struct RuleSet {
@@ -418,9 +421,9 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     }
   }
 
-  impl RuleSet {
-    pub open spec fn wf(self) -> bool {
-      forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].wf()
+  impl SpecRuleSet {
+    pub open spec fn spec_wf(self) -> bool {
+      forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
     } 
     
   /* pub open spec fn contains(self, input : Rule) -> bool 
@@ -486,17 +489,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     } 
   }
 
-  impl Proof {
-    pub fn head(&self) -> Prop
-    requires self matches Proof::Pstep(rule,s,branches) ==> rule.complete_subst(s),
-    {
-      match self {
-        Proof::Pstep(rule, s, branches) => rule.subst(s).head,
-        Proof::QED(p) => p.clone(),
-      }
-    } 
-
-  /* pub open spec fn valid(&self, rule_set: RuleSet) -> bool {
+  impl SpecProof {
+    /* pub open spec fn valid(&self, rule_set: RuleSet) -> bool {
       match self {
         Proof::QED(p) => p.concrete() && !p.symbolic() && p.valid(),
         Proof::Pstep(rule, s, branches) => rule_set.contains(*rule) &&
@@ -506,7 +500,17 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         rule1.body[i] == branches[i].head()}  */
       }
     } */
- 
+  }
+
+  impl Proof {
+    pub fn head(&self) -> Prop
+    requires self matches Proof::Pstep(rule,s,branches) ==> rule.deep_view().spec_complete_subst(s),
+    {
+      match self {
+        Proof::Pstep(rule, s, branches) => rule.subst(s).head,
+        Proof::QED(p) => p.clone(),
+      }
+    } 
   } 
 
   fn main(){
