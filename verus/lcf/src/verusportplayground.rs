@@ -238,27 +238,32 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       //Prop::BuiltinOp(_, args) => forall| i : int| 0 <= i < args.len() ==> args[i].concrete()
       }
     }
-  }
 
-  impl Prop {
-    fn subst(&self, s: &Subst) -> (res: Prop)
-    requires self.deep_view().spec_complete_subst(s)
-    ensures res.deep_view().spec_concrete(),
+    pub open spec fn spec_symbolic(self) -> bool
     {
-      match self {
-        Prop::App(h, args) => {
-          let mut v = Vec::<Term>::new();
-          for i in 0..args.len()
-          invariant 0 <= i <= args.len(),
-          v.len() == i,
-          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_complete_subst(*s),
-          forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
-            {
-              v.push(args[i].clone().subst(s));
-            }
-        Prop::App(h.clone(), v)
+      self is App
+    }
+
+    pub open spec fn spec_valid(self) -> bool 
+    {
+      if self.spec_symbolic() == true || self.spec_concrete() == false
+      {
+        false
       }
-      Prop::Eq(x, y) => Prop::Eq(x.clone().subst(s), y.clone().subst(s))
+      else 
+      {
+        match self {
+          SpecProp::Eq(x, y) => match (x,y) {
+            (SpecTerm::Const(x), SpecTerm::Const(y)) =>  x == y,
+            (SpecTerm::Var(x), SpecTerm::Var(y)) => false,
+            (SpecTerm::Const(_), SpecTerm::Var(_)) | (SpecTerm::Var(_), SpecTerm::Const(_)) => false,
+
+          }
+          SpecProp::App(s, v) => false,
+          /* Prop::BuiltinOp(b, args) => (
+          // will implement when we do buitlins
+          ) */
+        }
       }
     }
 
@@ -282,34 +287,30 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       Prop::Eq(x, y) => Prop::Eq(x.clone().subst(s), y.clone().subst(s))
     }
   } */
+  }
 
-    pub open spec fn symbolic(self) -> bool
+  impl Prop {
+    fn subst(&self, s: &Subst) -> (res: Prop)
+    requires self.deep_view().spec_complete_subst(s)
+    ensures res.deep_view().spec_concrete(),
     {
-      self is App
+      match self {
+        Prop::App(h, args) => {
+          let mut v = Vec::<Term>::new();
+          for i in 0..args.len()
+          invariant 0 <= i <= args.len(),
+          v.len() == i,
+          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_complete_subst(*s),
+          forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
+            {
+              v.push(args[i].clone().subst(s));
+            }
+        Prop::App(h.clone(), v)
+      }
+      Prop::Eq(x, y) => Prop::Eq(x.clone().subst(s), y.clone().subst(s))
+      }
     }
-
-    pub open spec fn valid(self) -> bool 
-    {
-      if self.symbolic() == true || self.deep_view().spec_concrete() == false
-      {
-        false
-      }
-      else 
-      {
-        match self {
-          Prop::Eq(x, y) => match (x,y) {
-            (Term::Const(x), Term::Const(y)) =>  x == y,
-            (Term::Var(x), Term::Var(y)) => false,
-            (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
-
-          }
-          Prop::App(s, v) => false,
-          /* Prop::BuiltinOp(b, args) => (
-          // will implement when we do buitlins
-          ) */
-        }
-      }
-    } 
+ 
   }
 
   pub struct Rule {
@@ -360,7 +361,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       for i in 0..self.body.len()
       invariant 0 <= i <= self.body.len(),
       v.len() == i,
-        forall |j: int| #![auto] 0 <= j < self.bod.len() ==> self.body[j].deep_view().spec_complete_subst(s),
+        forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].deep_view().spec_complete_subst(s),
         forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
       {
         v.push(self.body[i].subst(s));
@@ -395,7 +396,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   } */
 
     pub open spec fn wf(self) -> bool {
-    self.head.symbolic()
+    self.head.deep_view().spec_symbolic()
   }
   }
 
