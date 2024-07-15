@@ -47,7 +47,7 @@ pub enum SpecConst {
   Nat (u64),            // waiting on conversion from vec to seq issue to be resolved
   Str (String),
   //List (Seq<SpecConst>)
-}
+  }
 
 impl DeepView for Const {    // attempt at forcing vec units into seq
   type V = SpecConst;
@@ -124,32 +124,19 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     }
   }
  
-  impl Term {
-  
-    pub open spec fn complete_subst(self, s: Subst) -> bool
+  impl SpecTerm {
+    pub open spec fn spec_complete_subst(self, s: Subst) -> bool
     {
       match self {
-        Term::Var(v) => s@.contains_key(v@), 
-        Term::Const(_) => true,
+        SpecTerm::Var(v) => s@.contains_key(v@), 
+        SpecTerm::Const(_) => true,
       }
     } 
+    
   
-    pub open spec fn concrete(self) -> bool
+    pub open spec fn spec_concrete(self) -> bool
     {
       self is Const
-    } 
-
-    pub fn subst(self, s: &Subst) -> (res: Term)
-    requires self.complete_subst(*s)
-    ensures res.concrete()
-    {
-      match self {
-        Term::Var(v) => {
-          let u_option = s.get(v.as_str());
-          Term::Const(u_option.unwrap().clone())
-        },
-        Term::Const(_) => self,
-      }
     } 
 
     /* pub open spec fn SpecSubst(self, s: &Subst) -> (res: Term)
@@ -172,6 +159,21 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       }  
     } */
 
+  } 
+
+  impl Term {
+    pub fn subst(self, s: &Subst) -> (res: Term)
+    requires self.spec_complete_subst(*s).deep_view()
+    ensures res.spec_concrete().deep_view()
+    {
+      match self {
+        Term::Var(v) => {
+          let u_option = s.get(v.as_str());
+          Term::Const(u_option.unwrap().clone())
+        },
+        Term::Const(_) => self,
+      }
+    }  
   }
 
   pub enum Prop {
