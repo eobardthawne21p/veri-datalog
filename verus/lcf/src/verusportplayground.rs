@@ -133,7 +133,6 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       }
     } 
     
-  
     pub open spec fn spec_concrete(self) -> bool
     {
       self is Const
@@ -158,7 +157,6 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         Term::Const(_) => self,
       }  
     } */
-
   } 
 
   impl Term {
@@ -211,7 +209,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl PartialEq for Prop {
-    fn eq(&self, other : &Self) -> bool
+    fn eq(&self, other : &Self) -> (res: bool)
+    ensures res <==> self.deep_view() == other.deep_view()
     {
       match (self, other) {
         (Prop::App(s, v), Prop::App(t, w)) => s == t && v == w,
@@ -222,28 +221,29 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     }
   } 
 
-  impl Prop {
-
-    pub open spec fn complete_subst(self, s: &Subst) -> bool
+  impl SpecProp {
+    pub open spec fn spec_complete_subst(self, s: &Subst) -> bool
     {
       match self {
-        Prop::App(head, args) => forall|i : int| #![auto] 0 <= i < args.len() ==> args[i].complete_subst(*s),
-        Prop::Eq(x, y) => x.complete_subst(*s) && y.complete_subst(*s)
+        SpecProp::App(head, args) => forall|i : int| #![auto] 0 <= i < args.len() ==> args[i].spec_complete_subst(*s),
+        SpecProp::Eq(x, y) => x.spec_complete_subst(*s) && y.spec_complete_subst(*s)
         //Prop::BuiltinOp(_, args) => forall| i : Subst| 0 <= i as i32 < args.len() ==> args[i as i32].complete_subst(),
       }
     }
 
-    pub open spec fn concrete(self) -> bool {
+    pub open spec fn spec_concrete(self) -> bool {
       match self {
-      Prop::App(head, args) => forall| i : int| #![auto] 0 <= i < args.len() ==> args[i].concrete(),
-      Prop::Eq(x, y) => x.concrete() && y.concrete(),
+      SpecProp::App(head, args) => forall| i : int| #![auto] 0 <= i < args.len() ==> args[i].spec_concrete(),
+      SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
       //Prop::BuiltinOp(_, args) => forall| i : int| 0 <= i < args.len() ==> args[i].concrete()
       }
     }
+  }
 
+  impl Prop {
     fn subst(&self, s: &Subst) -> (res: Prop)
-    requires self.complete_subst(s)
-    ensures res.concrete(),
+    requires self.deep_view().spec_complete_subst(s)
+    ensures res.deep_view().spec_concrete(),
     {
       match self {
         Prop::App(h, args) => {
@@ -251,8 +251,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
           for i in 0..args.len()
           invariant 0 <= i <= args.len(),
           v.len() == i,
-          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].complete_subst(*s),
-          forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_complete_subst(*s),
+          forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
             {
               v.push(args[i].clone().subst(s));
             }
@@ -290,7 +290,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
 
     pub open spec fn valid(self) -> bool 
     {
-      if self.symbolic() == true || self.concrete() == false
+      if self.symbolic() == true || self.deep_view().spec_concrete() == false
       {
         false
       }
@@ -345,11 +345,11 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
 
   impl Rule {
     pub open spec fn complete_subst(self, s: &Subst) -> bool {
-      self.head.complete_subst(s) && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].complete_subst(s)
+      self.head.deep_view().spec_complete_subst(s) && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].deep_view().spec_complete_subst(s)
     }
 
     pub open spec fn concrete(self) -> bool {
-      self.head.concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].concrete()
+      self.head.deep_view().spec_concrete() && forall| i : int| #![auto] 0 <= i < self.body.len() ==> self.body[i].deep_view().spec_concrete()
     }
 
     pub fn subst(&self, s : &Subst) -> (res : Rule) 
@@ -360,8 +360,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       for i in 0..self.body.len()
       invariant 0 <= i <= self.body.len(),
       v.len() == i,
-        forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].complete_subst(s),
-        forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
+        forall |j: int| #![auto] 0 <= j < self.bod.len() ==> self.body[j].deep_view().spec_complete_subst(s),
+        forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
       {
         v.push(self.body[i].subst(s));
       }
