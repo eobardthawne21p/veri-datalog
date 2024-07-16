@@ -290,6 +290,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl Prop {
+
     fn subst(&self, s: &Subst) -> (res: Prop)
     requires self.deep_view().spec_complete_subst(s)
     ensures res.deep_view().spec_concrete(),
@@ -300,6 +301,10 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
           for i in 0..args.len()
           invariant 0 <= i <= args.len(),
           v.len() == i,
+          forall |k: int| #![auto] 0 <= k < args.len() ==> match self.deep_view() {
+            SpecProp::App(_, spec_args) => args[k].deep_view() == spec_args[k],
+            SpecProp::Eq(_,_) => false,
+          },
           forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_complete_subst(*s),
           forall |j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete()
             {
