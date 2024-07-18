@@ -259,17 +259,17 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       }
     }
 
-    /* pub open spec fn spec_subst(&self, s: &Subst) -> (res: SpecProp)
-    recommends self.spec_complete_subst(s)
+    pub open spec fn spec_subst(&self, s: &SpecSubst) -> (res: SpecProp)
+    recommends self.spec_complete_subst(&s)
     {
       match self {
         SpecProp::App(h, args) => {
-          let new_sequence = args.map_values(|p: SpecProp| p.spec_subst(s));
-          SpecProp::App(h, new_sequence)
+          let new_sequence = args.map_values(|p: SpecTerm| p.spec_subst(s));
+          SpecProp::App(*h, new_sequence)
         }
         SpecProp::Eq(x, y) => SpecProp::Eq(x.spec_subst(s), y.spec_subst(s))
       }
-    } */
+    } 
   }
 
   impl Prop {
