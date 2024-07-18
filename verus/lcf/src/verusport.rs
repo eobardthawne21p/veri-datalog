@@ -138,17 +138,17 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       self is Const
     } 
 
-    /* pub open spec fn spec_subst(self, s: &SpecSubst) -> (res: SpecTerm)
+    pub open spec fn spec_subst(self, s: &SpecSubst) -> (res: SpecTerm)
     recommends self.spec_complete_subst(*s)
     {
       match self{
         SpecTerm::Var(v) => {
-          let u_option = s.get(v);
-          SpecTerm::Const(u_option.unwrap())
+          let u_option = s.index(v);
+          SpecTerm::Const(u_option)
         },
         SpecTerm::Const(_) => self,
       }  
-    } */
+    } 
   } 
 
   impl Term {
