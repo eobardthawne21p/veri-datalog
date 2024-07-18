@@ -346,26 +346,18 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       self.head.spec_symbolic()
     }
 
-    /* pub open spec fn spec_subst(&self, s : &Subst) -> (res : Rule) 
-  recommends self.complete_subst(s)
+    pub open spec fn spec_subst(&self, s : &SpecSubst) -> (res : SpecRule) 
+    recommends self.spec_complete_subst(s)
   
-  {
-    let mut v = Vec::<Prop>::new();
-    for i in 0..self.body.len()
-    /invariant 0 <= i <= self.body.len(),
-    v.len() == i,
-      forall |j: int| #![auto] 0 <= j < self.body.len() ==> self.body[j].complete_subst(s),
-      forall |j: int| #![auto] 0 <= j < i ==> v[j].concrete()
     {
-      v.push(self.body[i].subst(s));
-    }
-      let result = Rule {
-        head : self.head.subst(s),
-        body : v,
+      let new_sequence = self.body.map_values(|p: SpecProp| p.spec_subst(s));
+      let result = SpecRule {
+        head : self.head.spec_subst(s),
+        body : new_sequence,
         id : self.id,
       };
     result
-  } */
+  } 
   }
 
   impl Rule {
@@ -419,34 +411,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     decreases self.rs.len(),
     {
       //first attempt 
-
-      for i in 0..self.rs.len() {
-        if (self.rs[i as int] == input)
-        {
-          true
-        }
-      }
-      false
-    }
-
-      // second attempt
-
-      if self.rs.len() == 0
-      {
-        false
-      }
-      else
-      {
-        if (self.rs[self.rs.len() - 1]) == input {
-          true
-        }
-        else {
-          self.rs.pop();
-          self.SpecContains(input)
-       }
-      }
     } */
-
   } 
 
   pub enum Proof {
@@ -479,7 +444,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl SpecProof {
-    /* pub open spec fn valid(&self, rule_set: RuleSet) -> bool {
+    /* pub open spec fn spec_valid(&self, rule_set: SpecRuleSet) -> bool {
       match self {
         Proof::QED(p) => p.concrete() && !p.symbolic() && p.valid(),
         Proof::Pstep(rule, s, branches) => rule_set.spec_contains(*rule) &&
