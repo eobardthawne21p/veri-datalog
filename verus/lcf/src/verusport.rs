@@ -478,6 +478,41 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     } 
   } 
 
+  pub struct Thm {
+    pub val: Prop,
+    pub p: Proof,
+  }
+
+  pub struct SpecThm {
+    pub val : SpecProp,
+    pub p: SpecProof,
+  }
+
+  impl DeepView for Thm {
+    type V = SpecThm;
+
+    open spec fn deep_view(&self) -> Self::V {
+      SpecThm {
+        val : self.val.deep_view(),
+        p: self.p.deep_view(),
+      }
+    }
+  }
+
+  impl SpecThm {
+    pub open spec fn wf(self, rule_set : SpecRuleSet) -> bool
+    {
+      self.p.spec_valid(rule_set) && self.p.spec_head() == self.val
+    }
+  }
+
+  /* pub fn mk_leaf(p: Prop) -> (res: Result<Thm, >)
+  ensures p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic() && p.deep_view().spec_valid() ==> res.is_Ok(),
+  res.is_ok() ==>res.unwrap().val == p
+  {
+    Ok(p)
+  } */
+
   fn main(){
     
   }
