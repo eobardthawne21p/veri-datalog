@@ -432,8 +432,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         body : new_sequence,
         id : self.id,
       };
-    result
-  } 
+      result
+    } 
   }
 
   impl Rule {
@@ -591,9 +591,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   } 
 
   fn main(){
-    
   }
-
 }  
 
 
