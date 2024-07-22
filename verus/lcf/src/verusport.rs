@@ -299,13 +299,14 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
             (Term::Const(x), Term::Const(y)) => true,
             (Term::Var(x), Term::Var(y)) => false,
             (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
-
           }
           Prop::App(s, v) => false,
+          
           /* Prop::BuiltinOp(b, args) => (
           // will implement when we do buitlins
           ) */
         }
+        
     } 
 
     pub fn symbolic(self) -> (res: bool)
@@ -325,6 +326,10 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         Prop::App(head, args) => { 
           let mut flag = true;
           for i in 0..args.len()
+          invariant 0 <= i <= args.len(),
+          args.len() == i,
+          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_concrete(),
+          //forall |j: int| #![auto] 0 <= j < i ==> args[j].deep_view().spec_concrete() 
           {
             flag = args[i].clone().concrete() && flag;
           }
@@ -340,6 +345,10 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         Prop::App(head, args) => {
           let mut flag = true;
           for i in 0..args.len()
+          invariant 0 <= i <= args.len(),
+          args.len() == i,
+          forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_complete_subst(s.deep_view()),
+          forall |j: int| #![auto] 0 <= j < i ==> args[j].deep_view().spec_complete_subst(s.deep_view()) 
           {
             flag = args[i].clone().complete_subst(s) && flag;
           }
