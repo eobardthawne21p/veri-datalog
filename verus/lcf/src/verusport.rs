@@ -152,9 +152,26 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   } 
 
   impl Term {
+    pub  fn complete_subst(self, s: &Subst) -> (res: bool)
+    ensures res <==> self.deep_view().spec_complete_subst(s.deep_view())
+    {
+      match self {
+        Term::Var(v) => s.contains_key(v.as_str()), 
+        Term::Const(_) => true,
+      }
+    }
+    pub fn concrete(self) -> (res: bool)
+    ensures res <==> self.deep_view().spec_concrete()
+    {
+      match self {
+        Term::Const(_) => true,
+        Term::Var(_) => false,
+      }
+    }
     pub fn subst(self, s: &Subst) -> (res: Term)
     requires self.deep_view().spec_complete_subst(s.deep_view())
-    ensures res.deep_view().spec_concrete()
+    ensures res.deep_view().spec_concrete(),
+    res.deep_view() <==> self.deep_view().spec_subst(&s.deep_view())
     {
       match self {
         Term::Var(v) => {
@@ -273,10 +290,70 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl Prop {
+    pub fn valid(self) -> (res: bool)
+    requires !self.deep_view().spec_symbolic(),
+    ensures res <==> self.deep_view().spec_valid(),
+    {
+        match self {
+          Prop::Eq(x, y) => match (x,y) {
+            (Term::Const(x), Term::Const(y)) => true,
+            (Term::Var(x), Term::Var(y)) => false,
+            (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
 
-    fn subst(&self, s: &Subst) -> (res: Prop)
+          }
+          Prop::App(s, v) => false,
+          /* Prop::BuiltinOp(b, args) => (
+          // will implement when we do buitlins
+          ) */
+        }
+    } 
+
+    pub fn symbolic(self) -> (res: bool)
+    ensures res <==> self.deep_view().spec_symbolic()
+    {
+      match self {
+        Prop::App(_, _) => true,
+        Prop::Eq(_,_) => false,
+      }
+    }
+
+    pub fn concrete(self) -> (res: bool ) 
+    ensures res <==> self.deep_view().spec_concrete()
+    {
+      match self
+      {
+        Prop::App(head, args) => { 
+          let mut flag = true;
+          for i in 0..args.len()
+          {
+            flag = args[i].clone().concrete() && flag;
+          }
+          flag },
+        Prop::Eq(x, y) => x.concrete() && y.concrete(),
+      }
+    }
+
+    pub fn complete_subst(&self, s: &Subst) -> (res: bool)
+    ensures res <==> self.deep_view().spec_complete_subst(&s.deep_view())
+    {
+      match self {
+        Prop::App(head, args) => {
+          let mut flag = true;
+          for i in 0..args.len()
+          {
+            flag = args[i].clone().complete_subst(s) && flag;
+          }
+          flag
+        },
+        Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(s)
+        //Prop::BuiltinOp(_, args) => forall| i : Subst| 0 <= i as i32 < args.len() ==> args[i as i32].complete_subst(),
+      }
+    } 
+
+    pub fn subst(&self, s: &Subst) -> (res: Prop)
     requires self.deep_view().spec_complete_subst(&s.deep_view())
-    ensures res.deep_view().spec_concrete(),
+    ensures res.deep_view() <==> self.deep_view().spec_subst(&s.deep_view()),
+    res.deep_view().spec_concrete()
     {
       match self {
         Prop::App(h, args) => {
@@ -348,7 +425,6 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
 
     pub open spec fn spec_subst(&self, s : &SpecSubst) -> (res : SpecRule) 
     recommends self.spec_complete_subst(s)
-  
     {
       let new_sequence = self.body.map_values(|p: SpecProp| p.spec_subst(s));
       let result = SpecRule {
@@ -363,7 +439,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   impl Rule {
     pub fn subst(&self, s : &Subst) -> (res : Rule) 
     requires self.deep_view().spec_complete_subst(&s.deep_view())
-    ensures res.deep_view().spec_concrete()
+    ensures res.deep_view().spec_concrete(),
+    res.deep_view() <==> self.deep_view().spec_subst(&s.deep_view())
     {
       let mut v = Vec::<Prop>::new();
       assert (forall |k: int| 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view()) == self.deep_view().body[k]);
@@ -406,12 +483,6 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     pub open spec fn spec_wf(self) -> bool {
       forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
     } 
-    
-  /* pub open spec fn spec_contains(self, input : Rule) -> bool 
-    decreases self.rs.len(),
-    {
-      //first attempt 
-    } */
   } 
 
   pub enum Proof {
@@ -468,8 +539,9 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl Proof {
-    pub fn head(&self) -> Prop
+    pub fn head(&self) -> (res: Prop)
     requires self matches Proof::Pstep(rule,s,branches) ==> rule.deep_view().spec_complete_subst(&s.deep_view()),
+    ensures res.deep_view() <==> self.deep_view().spec_head()
     {
       match self {
         Proof::Pstep(rule, s, branches) => rule.subst(s).head,
@@ -506,12 +578,17 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     }
   }
 
-  /* pub fn mk_leaf(p: Prop) -> (res: Result<Thm, >)
-  ensures p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic() && p.deep_view().spec_valid() ==> res.is_Ok(),
-  res.is_ok() ==>res.unwrap().val == p
+  pub fn mk_leaf(p: Prop) -> (res: Result<Thm, () >)
+  ensures p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic() && p.deep_view().spec_valid() ==> res.is_Ok(), 
+  res matches Ok(v) ==> v.val == p
   {
-    Ok(p)
-  } */
+    if p.clone().concrete() && !p.clone().symbolic() && p.clone().valid()
+    {
+      Ok(Thm{val: p.clone(), p: Proof::QED(p)})
+    }
+    else { Err(()) }
+    
+  } 
 
   fn main(){
     
