@@ -496,6 +496,46 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         };
       result
     } 
+
+    pub fn complete_subst(&self, s: &Subst) -> (res: bool)
+    ensures res <==> self.deep_view().spec_complete_subst(s.deep_view()),
+    {
+      self.head.complete_subst(s) &&
+      {
+        assert (forall |k: int| 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view()) == self.deep_view().body[k]);
+        let mut flag = true;
+        for i in 0..self.body.len()
+        invariant 0 <= i <= self.body.len(),
+        flag <==> forall |j: int| #![auto] 0 <= j < i ==> self.body[j].deep_view().spec_complete_subst(s.deep_view()),
+        {
+          flag = self.body[i].clone().complete_subst(s) && flag
+        }
+        flag
+      } 
+    }
+
+    pub fn concrete(&self) -> (res: bool)
+    ensures res <==> self.deep_view().spec_concrete(),
+    {
+      self.head.clone().concrete() &&
+      {
+        assert (forall |k: int| 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view()) == self.deep_view().body[k]);
+        let mut flag = true;
+        for i in 0..self.body.len()
+        invariant 0 <= i <= self.body.len(),
+        flag <==> forall |j: int| #![auto] 0 <= j < i ==> self.body[j].deep_view().spec_concrete(),
+        {
+          flag = self.body[i].clone().concrete() && flag
+        }
+        flag
+      }
+    }
+
+    pub fn wf(&self) -> (res: bool)
+    ensures res <==> self.deep_view().spec_wf()
+    {
+      self.head.clone().symbolic()
+    }
   }
 
   pub struct RuleSet {
@@ -521,6 +561,22 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       forall |i : int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
     } 
   } 
+
+  impl RuleSet {
+    pub fn wf(self) -> (res: bool)
+    ensures res <==> self.deep_view().spec_wf()
+    {
+      let mut flag = false;
+      assert (forall |k: int| 0 <= k < self.rs.len() ==> (#[trigger] self.rs[k].deep_view()) == self.deep_view().rs[k]);
+      for i in 0..self.rs.len()
+        invariant 0 <= i <= self.rs.len(),
+        flag <==> forall |j: int| #![auto] 0 <= j < i ==> self.rs[j].deep_view().spec_wf(),
+        {
+          flag = self.rs[i].wf() && flag 
+        }
+        flag
+    }
+  }
 
   pub enum Proof {
     Pstep (Rule, Subst, Vec<Proof>),
@@ -585,6 +641,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         Proof::QED(p) => p.clone(),
       }
     } 
+
   } 
 
   pub struct Thm {
@@ -615,17 +672,28 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     }
   }
 
-  pub fn mk_leaf(p: Prop) -> (res: Result<Thm, () >)
+  pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, () >)
   ensures p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic() && p.deep_view().spec_valid() ==> res.is_Ok(), 
   res matches Ok(v) ==> v.val == p
   {
     if p.clone().concrete() && !p.clone().symbolic() && p.clone().valid()
     {
-      Ok(Thm{val: p.clone(), p: Proof::QED(p)})
+      Ok(Thm{val: p.clone(), p: Proof::QED(p.clone())})
     }
     else { Err(()) }
     
   } 
+
+  /* pub fn mk_thm(rs: RuleSet, i: int, s: Subst, args: Vec<Thm>) -> (res: Result<Thm, ()>)
+  requires i < rs.rs.len(),
+  forall |j: int| 0 <= j < args.len() ==> args[j].deep_view().wf(rs.deep_view()),
+  ensures (rs.rs[i].complete_subst(&s) && args.len() == rs.rs[i].body.len() 
+  && forall |j: int| 0 <= j < args.len() ==> args[j].val == rs.rs[i].subst(&s).body[j]
+  ==> res.is_Ok()),
+  //res.is_Ok() ==> rs.rs[i].complete_subst(&s) && res.val.wf(rs.deep_view()) && res.val.val == rs.rs[i].subst(&s).head
+  {
+
+  } */
 
   fn main(){
   }
