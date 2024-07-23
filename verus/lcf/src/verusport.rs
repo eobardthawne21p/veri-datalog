@@ -566,7 +566,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     pub fn wf(self) -> (res: bool)
     ensures res <==> self.deep_view().spec_wf()
     {
-      let mut flag = false;
+      let mut flag = true;
       assert (forall |k: int| 0 <= k < self.rs.len() ==> (#[trigger] self.rs[k].deep_view()) == self.deep_view().rs[k]);
       for i in 0..self.rs.len()
         invariant 0 <= i <= self.rs.len(),
@@ -684,16 +684,16 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     
   } 
 
-  /* pub fn mk_thm(rs: RuleSet, i: int, s: Subst, args: Vec<Thm>) -> (res: Result<Thm, ()>)
+  pub fn mk_thm(rs: RuleSet, i: int, s: Subst, args: Vec<Thm>) -> (res: Result<Thm, ()>)
   requires i < rs.rs.len(),
   forall |j: int| 0 <= j < args.len() ==> args[j].deep_view().wf(rs.deep_view()),
   ensures (rs.rs[i].complete_subst(&s) && args.len() == rs.rs[i].body.len() 
   && forall |j: int| 0 <= j < args.len() ==> args[j].val == rs.rs[i].subst(&s).body[j]
   ==> res.is_Ok()),
-  //res.is_Ok() ==> rs.rs[i].complete_subst(&s) && res.val.wf(rs.deep_view()) && res.val.val == rs.rs[i].subst(&s).head
+  //res.is_Ok() ==> (res matches Ok(Thm{val, p }) ==> rs.rs[i].complete_subst(&s) && val.wf(rs.deep_view()) && val.val == rs.rs[i].subst(&s).head),
   {
-
-  } */
+    
+  } 
 
   fn main(){
   }
