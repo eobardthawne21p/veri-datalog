@@ -688,12 +688,25 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   requires i < rs.rs.len(),
   forall |j: int| 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
   ensures (rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && args.len() == rs.rs[i as int].body.len() 
-  && forall |j: int| 0 <= j < args.len() ==> args[j].val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).body[j]
+  && forall |j: int| 0 <= j < args.len() ==> args[j].deep_view().val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).body[j]
   ==> res.is_Ok()),
-  res matches Ok(thm) ==> rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).head,
+  res matches Ok(thm) ==> rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).head,
   {
     let r = rs.rs[i];
-
+    if args.len() == r.body.len() && r.complete_subst(&s)// && (forall |j: usize| 0 <= j < args.len() ==> args[j].val == r.subst(&s).body[j])
+    {
+      let mut pfs: Vec<Proof> = Vec::new();
+      for i in 0..args.len()
+      {
+        pfs.push(args[i].p)
+      }
+      let p = Proof::Pstep(r, s, pfs);
+      Ok(Thm {val: r.subst(&s).head, p: p})
+    }
+    else
+    {
+      Err(())
+    }
   } 
 
   fn main(){
