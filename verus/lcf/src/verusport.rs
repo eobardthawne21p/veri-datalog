@@ -693,7 +693,16 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   res matches Ok(thm) ==> rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).head,
   {
     let r = rs.rs[i];
-    if args.len() == r.body.len() && r.complete_subst(&s)// && (forall |j: usize| 0 <= j < args.len() ==> args[j].val == r.subst(&s).body[j])
+    if args.len() == r.body.len() && r.complete_subst(&s) && { 
+      let mut flag = true;
+      for i in 0..args.len()
+        invariant 0 <= i < args.len(),
+        flag <==> forall |j: int| #![auto] 0 <= j < i ==> args[i as int].deep_view().val == r.deep_view().spec_subst(s.deep_view()).body[i as int],
+        {
+          flag = args[i].val == r.subst(&s).body[i] && flag 
+        }
+        flag
+    }
     {
       let mut pfs: Vec<Proof> = Vec::new();
       for i in 0..args.len()
