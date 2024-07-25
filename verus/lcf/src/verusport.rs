@@ -699,7 +699,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         invariant 0 <= i < args.len(),
         flag <==> forall |j: int| #![auto] 0 <= j < i ==> args[i as int].deep_view().val == r.deep_view().spec_subst(s.deep_view()).body[i as int],
         {
-          flag = args[i].val == r.subst(&s).body[i] && flag 
+          flag = (args[i].val == r.subst(&s).body[i] && flag) 
         }
         flag
     }
