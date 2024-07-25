@@ -41,7 +41,7 @@ verus! {
         (Const::Str(s), Const::Str(t)) => s.eq(t),
         _ => false
       }
-    }   
+    }  
   }
 
   impl Clone for Const {
@@ -166,6 +166,16 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   } 
 
   impl Term {
+    pub fn term_eq(&self, other : &Self) -> (res: bool)
+      ensures res <==> self.deep_view() == other.deep_view()
+    {
+      match (self, other) {
+        (Term::Const(s), Term::Const(t)) => Const::const_eq(&s, &t),
+        (Term::Var(u), Term::Var(v)) => u.eq(v),
+        _ => false
+      }
+    }   
+
     pub  fn complete_subst(self, s: &Subst) -> (res: bool)
     ensures res <==> self.deep_view().spec_complete_subst(s.deep_view())
     {
@@ -196,6 +206,12 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
       }
     }  
   }
+
+  # [verifier::external_body] pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
+  ensures res <==> a.deep_view() == b.deep_view()
+  {
+    a == b
+  } 
 
   pub enum Prop {
     App(String, Vec<Term>),
@@ -304,6 +320,16 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   }
 
   impl Prop {
+    pub fn prop_eq(&self, other : &Self) -> (res: bool)
+      ensures res <==> self.deep_view() == other.deep_view()
+    {
+      match (self, other) {
+        (Prop::App(a, b), Prop::App(c, d)) => a.eq(c) && terms_eq(b, d),
+        (Prop::Eq(h, i), Prop::Eq(j , k)) => Term::term_eq(h, j) && Term::term_eq(i, k),
+        _ => false
+      }
+    }   
+
     pub fn valid(self) -> (res: bool)
     requires !self.deep_view().spec_symbolic(),
     self.deep_view().spec_concrete(),
@@ -684,7 +710,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     
   } 
 
-  pub fn mk_thm(rs: RuleSet, i: usize, s: Subst, args: Vec<Thm>) -> (res: Result<Thm, ()>)
+  pub fn mk_thm(rs: &RuleSet, i: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
   requires i < rs.rs.len(),
   forall |j: int| 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
   ensures (rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && args.len() == rs.rs[i as int].body.len() 
@@ -699,7 +725,7 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         invariant 0 <= i < args.len(),
         flag <==> forall |j: int| #![auto] 0 <= j < i ==> args[i as int].deep_view().val == r.deep_view().spec_subst(s.deep_view()).body[i as int],
         {
-          flag = (args[i].val == r.subst(&s).body[i] && flag) 
+          flag = (Prop::prop_eq(&r.subst(&s).body[i], &args[i].val) && flag) 
         }
         flag
     }
