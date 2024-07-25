@@ -50,6 +50,15 @@ impl<Value:PartialEq> PartialEq for StringHashMap<Value> {
     } 
 }
 
+impl<Value: Clone + DeepView> Clone for StringHashMap<Value> {
+    #[verifier::external_body]
+    fn clone(&self) -> (res: Self) 
+        ensures self.deep_view() == res.deep_view()
+    {
+        Self { m: self.m.clone() }
+    }
+}
+
 impl<Value> StringHashMap<Value> {
     #[verifier::external_body]
     pub fn new() -> (result: Self)
