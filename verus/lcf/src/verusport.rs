@@ -734,16 +734,19 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
     
   } 
 
-  pub fn mk_thm(rs: &RuleSet, i: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
-  requires i < rs.rs.len(),
+  pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
+  requires k < rs.rs.len(),
   forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
-  ensures (rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && args.len() == rs.rs[i as int].body.len() 
-  && forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).body[j]
+  ensures (rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && args.len() == rs.rs[k as int].body.len() 
+  && forall |j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j]
   ==> res.is_Ok()),
-  res matches Ok(thm) ==> rs.rs[i as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val == rs.rs[i as int].deep_view().spec_subst(s.deep_view()).head,
+  res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
   {
-    let r = rs.rs[i].clone();
-    if args.len() == r.body.len() && r.complete_subst(&s) && { 
+    let r = rs.rs[k].clone();
+    if !args.len() == r.body.len() || !r.complete_subst(&s)
+    {
+      return Err(());
+    }
       let mut flag = true;
       for i in 0..args.len()
         invariant 0 <= i < args.len(),
@@ -751,9 +754,8 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
         {
           flag = (Prop::prop_eq(&r.subst(&s).body[i], &args[i].val) && flag) 
         }
-        flag
-    }
-    {
+    
+    if flag == true {
       let mut pfs: Vec<Proof> = Vec::new();
       for i in 0..args.len()
       {
