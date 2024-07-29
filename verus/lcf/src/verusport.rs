@@ -9,8 +9,7 @@ verus! {
 pub enum Const {
     Atom(String),
     Nat(u64),
-    Str(String),  //List (Vec<Const>),
-    // vector???
+    Str(String),  
 }
 
 impl PartialEq for Const {
@@ -58,12 +57,12 @@ impl Clone for Const {
 
 pub enum SpecConst {
     Atom(Seq<char>),
-    Nat(u64),  // waiting on conversion from vec to seq issue to be resolved
+    Nat(u64),  
     Str(Seq<char>),
-    //List (Seq<SpecConst>)
+    
 }
 
-impl DeepView for Const {  // attempt at forcing vec units into seq
+impl DeepView for Const {  
     type V = SpecConst;
 
     open spec fn deep_view(&self) -> Self::V {
@@ -71,13 +70,6 @@ impl DeepView for Const {  // attempt at forcing vec units into seq
             Const::Atom(s) => SpecConst::Atom(s.view()),
             Const::Nat(n) => SpecConst::Nat(*n),
             Const::Str(s) => SpecConst::Str(s.view()),
-            //Const::List(vec) => SpecConst::List(vec.deep_view()),
-            /* let mut seq = Seq::<SpecConst>::empty();
-      for i in 0..vec.len() {
-          seq = seq.push(vec[i as int].deep_view());
-      }
-
-      SpecConst::List(seq) */
         }
     }
 }
@@ -222,8 +214,6 @@ pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
 pub enum Prop {
     App(String, Vec<Term>),
     Eq(Term, Term),
-    //BuiltinOp(b: Builtin, args: Vec<Term>),
-    // will add in BuiltinOp when Builtin is implemented
 }
 
 pub enum SpecProp {
@@ -277,8 +267,6 @@ impl SpecProp {
             SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(
                 s,
             )
-            //Prop::BuiltinOp(_, args) => forall| i : Subst| 0 <= i as i32 < args.len() ==> args[i as i32].complete_subst(),
-            ,
         }
     }
 
@@ -288,7 +276,6 @@ impl SpecProp {
                 #![auto]
                 0 <= i < args.len() ==> args[i].spec_concrete(),
             SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
-            //Prop::BuiltinOp(_, args) => forall| i : int| 0 <= i < args.len() ==> args[i].concrete()
         }
     }
 
@@ -308,9 +295,6 @@ impl SpecProp {
                     | (SpecTerm::Var(_), SpecTerm::Const(_)) => false,
                 },
                 SpecProp::App(s, v) => false,
-                /* Prop::BuiltinOp(b, args) => (
-          // will implement when we do buitlins
-          ) */
             }
         }
     }
@@ -355,9 +339,6 @@ impl Prop {
                 (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
             },
             Prop::App(s, v) => false,
-            /* Prop::BuiltinOp(b, args) => (
-          // will implement when we do buitlins
-          ) */
         }
     }
 
@@ -424,8 +405,6 @@ impl Prop {
             Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(
                 s,
             )
-            //Prop::BuiltinOp(_, args) => forall| i : Subst| 0 <= i as i32 < args.len() ==> args[i as i32].complete_subst(),
-            ,
         }
     }
 
@@ -709,7 +688,6 @@ impl Clone for Proof {
     }
 }
 
-#[verifier::loop_isolation(false)]
 impl SpecProof {
     pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
         decreases self,
@@ -792,6 +770,7 @@ pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
     }
 }
 
+#[verifier::loop_isolation(false)]
 pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
     requires
         k < rs.rs.len(),
@@ -824,13 +803,19 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
                 0 <= j < i ==> args[j as int].deep_view().val == r_subst.deep_view().body[j as int],
     {
         flag = (Prop::prop_eq(&r_subst.body[i], &args[i].val) && flag);
+        assert(flag ==> args[i as int].deep_view().val == r_subst.deep_view().body[i as int]);
     }
     if flag == true {
         let mut pfs: Vec<Proof> = Vec::new();
-        for i in 0..args.len() {
+        for i in 0..args.len()
+            invariant
+                0 <= i <= args.len(),
+
+        {
             pfs.push(args[i].p.clone())
         }
         let p = Proof::Pstep(r.clone(), s.clone(), pfs);
+        //assert(r_subst.deep_view().head == r.deep_view().spec_subst(s.deep_view()).head);
         Ok(Thm { val: r.subst(&s).head, p: p })
     } else {
         Err(())
