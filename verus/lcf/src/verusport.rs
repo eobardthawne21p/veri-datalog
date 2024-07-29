@@ -9,7 +9,7 @@ verus! {
 pub enum Const {
     Atom(String),
     Nat(u64),
-    Str(String),//List (Vec<Const>),
+    Str(String),  //List (Vec<Const>),
     // vector???
 }
 
@@ -544,6 +544,7 @@ impl Rule {
         ensures
             res.deep_view().spec_concrete(),
             res.deep_view() == self.deep_view().spec_subst(s.deep_view()),
+            res.body.view().len() == self.body.view().len(),
     {
         let mut v = Vec::<Prop>::new();
         assert(forall|k: int|
@@ -708,6 +709,7 @@ impl Clone for Proof {
     }
 }
 
+#[verifier::loop_isolation(false)]
 impl SpecProof {
     pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
         decreases self,
@@ -795,11 +797,11 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
         k < rs.rs.len(),
         forall|j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
     ensures
-        (rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && args.len()
-            == rs.rs[k as int].body.len() && forall|j: int|
+        ((rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && args.len()
+            == rs.rs[k as int].body.len() && (forall|j: int|
             #![auto]
             0 <= j < args.len() ==> args[j].deep_view().val
-                == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j] ==> res.is_Ok()),
+                == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j])) ==> res.is_Ok()),
         res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
             && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val
             == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
