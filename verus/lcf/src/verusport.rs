@@ -743,16 +743,21 @@ impl DeepView for Const {    // attempt at forcing vec units into seq
   res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
   {
     let r = rs.rs[k].clone();
-    if !args.len() == r.body.len() || !r.complete_subst(&s)
+    if args.len() != r.body.len() || !r.complete_subst(&s)
     {
       return Err(());
     }
       let mut flag = true;
+      let r_subst = r.subst(&s);
+      assert(r_subst.deep_view() == r.deep_view().spec_subst(s.deep_view()));
+      assert(r_subst.body.view().len() == r.body.view().len());
       for i in 0..args.len()
-        invariant 0 <= i < args.len(),
-        flag <==> forall |j: int| #![auto] 0 <= j < i ==>  args[j as int].deep_view().val ==  r.deep_view().spec_subst(s.deep_view()).body[j as int],
+        invariant 0 <= i <= args.len(),
+        r_subst.body.view().len() == r.body.view().len(),
+        r_subst.deep_view() == r.deep_view().spec_subst(s.deep_view()),
+        flag <==> forall |j: int| #![auto] 0 <= j < i ==>  args[j as int].deep_view().val ==  r_subst.deep_view().body[j as int],
         {
-          flag = (Prop::prop_eq(&r.subst(&s).body[i], &args[i].val) && flag) 
+          flag = (Prop::prop_eq(&r_subst.body[i], &args[i].val) && flag); 
         }
     
     if flag == true {
