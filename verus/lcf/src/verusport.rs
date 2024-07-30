@@ -812,6 +812,8 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
 {
     let r = rs.rs[k].clone();
+    assert(rs.deep_view().rs[k as int] == r.deep_view());
+    assert(rs.deep_view().rs.contains(r.deep_view()));
     if args.len() != r.body.len() || !r.complete_subst(&s) {
         return Err(());
     }
@@ -835,15 +837,17 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
         let mut pfs: Vec<Proof> = Vec::new();
         for i in 0..args.len()
             invariant
+                pfs.len() == i,
                 0 <= i <= args.len(),
+                forall |j: int| #![auto] 0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()), 
+                forall |j: int| #![auto] 0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head()
         {
-            pfs.push(args[i].p.clone())
+            pfs.push(args[i].p.clone());
+            proof { axiom_proof_deep_view(&args[i as int].p) };
         }
         let p = Proof::Pstep(r.clone(), s.clone(), pfs);
         let thm = Thm { val: r_subst.head, p: p };
-        assert(rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()));
-        assert(thm.deep_view().spec_wf(rs.deep_view()));
-        assert(thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head);
+        proof { axiom_proof_deep_view(&p) };
         Ok(thm)
     } else {
         Err(())
