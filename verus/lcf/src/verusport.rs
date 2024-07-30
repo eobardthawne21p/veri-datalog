@@ -13,6 +13,8 @@ pub enum Const {
 }
 
 impl PartialEq for Const {
+  // Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+  //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -29,6 +31,7 @@ impl PartialEq for Const {
 }
 
 impl Const {
+    // uses eq from impl Partial Eq to prove equality between items
     pub fn const_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -64,7 +67,7 @@ pub enum SpecConst {
 
 impl DeepView for Const {  
     type V = SpecConst;
-
+    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Const::Atom(s) => SpecConst::Atom(s.view()),
@@ -73,9 +76,9 @@ impl DeepView for Const {
         }
     }
 }
-
+// Utilizing StringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
 type Subst = StringHashMap<Const>;
-
+// Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
 
 spec fn compatible_subst(s: SpecSubst, t: SpecSubst) -> bool {
@@ -94,7 +97,7 @@ pub enum SpecTerm {
 
 impl DeepView for Term {
     type V = SpecTerm;
-
+    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Term::Const(c) => SpecTerm::Const(c.deep_view()),
@@ -116,6 +119,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
+  // Function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -155,6 +159,7 @@ impl SpecTerm {
 }
 
 impl Term {
+  // function proves equality for Term types
     pub fn term_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -167,6 +172,7 @@ impl Term {
     }
 
     pub fn complete_subst(self, s: &Subst) -> (res: bool)
+    // function checks whether Term items are either Const or are Vars with a key in the Subst StringHashMap
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
     {
@@ -176,6 +182,7 @@ impl Term {
         }
     }
 
+    // function checks if term variant is a base type
     pub fn concrete(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -186,6 +193,7 @@ impl Term {
         }
     }
 
+    // this functions performs a substitution to achieve a Const variant of Term
     pub fn subst(self, s: &Subst) -> (res: Term)
         requires
             self.deep_view().spec_complete_subst(s.deep_view()),
@@ -223,7 +231,7 @@ pub enum SpecProp {
 
 impl DeepView for Prop {
     type V = SpecProp;
-
+     // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Prop::App(s, v) => SpecProp::App(s.view(), v.deep_view()),
@@ -246,6 +254,7 @@ impl Clone for Prop {
 }
 
 impl PartialEq for Prop {
+  // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -259,6 +268,7 @@ impl PartialEq for Prop {
 }
 
 impl SpecProp {
+  // function checks if Prop variants contain key to map; calls spec_complete_subst from Term
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -270,6 +280,7 @@ impl SpecProp {
         }
     }
 
+    // checks if Prop variants are of base types
     pub open spec fn spec_concrete(self) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -283,6 +294,7 @@ impl SpecProp {
         self is App
     }
 
+    // function checks whether valid SpecProp types are concrete and are equal
     pub open spec fn spec_valid(self) -> bool {
         if self.spec_symbolic() == true || self.spec_concrete() == false {
             false
@@ -298,7 +310,7 @@ impl SpecProp {
             }
         }
     }
-
+    // reasons about substitution of SpecProp variants
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
         recommends
             self.spec_complete_subst(s),
@@ -314,6 +326,7 @@ impl SpecProp {
 }
 
 impl Prop {
+  // proves equality for Prop types. uses term_eq and terms_eq
     pub fn prop_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -324,7 +337,7 @@ impl Prop {
             _ => false,
         }
     }
-
+    // function checks whether Prop variants are concrete and elements are equal to each other
     pub fn valid(self) -> (res: bool)
         requires
             !self.deep_view().spec_symbolic(),
@@ -342,6 +355,7 @@ impl Prop {
         }
     }
 
+    // checks 
     pub fn symbolic(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_symbolic(),
