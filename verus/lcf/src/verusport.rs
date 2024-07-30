@@ -355,7 +355,6 @@ impl Prop {
         }
     }
 
-    // checks 
     pub fn symbolic(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_symbolic(),
@@ -366,6 +365,7 @@ impl Prop {
         }
     }
 
+    //checks whether Prop variants are base types
     pub fn concrete(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -393,6 +393,7 @@ impl Prop {
         }
     }
 
+    // checks if Prop variants contain key in Susbt StringHashMap
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -422,6 +423,7 @@ impl Prop {
         }
     }
 
+    //performs substitution on Prop types and converts them to base types
     pub fn subst(&self, s: &Subst) -> (res: Prop)
         requires
             self.deep_view().spec_complete_subst(s.deep_view()),
@@ -673,10 +675,19 @@ pub enum SpecProof {
 
 impl DeepView for Proof {
     type V = SpecProof;
-
-    // TODO(pratap): Fix this based on https://github.com/verus-lang/verus/issues/1222
     closed spec fn deep_view(&self) -> Self::V;
 }
+
+#[verifier::external_body]
+pub proof fn axiom_proof_deep_view(pf: &Proof)
+    ensures 
+        pf matches Proof::Pstep(r, s, v) ==> 
+          (#[trigger] pf.deep_view()) matches SpecProof::Pstep(spec_r, spec_s, spec_v)
+          && r.deep_view() == spec_r && s.deep_view() == spec_s && v.deep_view() == spec_v,
+        pf matches Proof::QED(p) ==> 
+          pf.deep_view() matches SpecProof::QED(spec_p)
+          && p.deep_view() == spec_p,
+{}
 
 impl PartialEq for Proof {
     fn eq(&self, other: &Self) -> bool {
@@ -731,7 +742,6 @@ impl SpecProof {
 }
 
 impl Proof {
-    #[verifier::external_body]
     pub fn head(&self) -> (res: Prop)
         requires
             self matches Proof::Pstep(rule, s, branches) ==> rule.deep_view().spec_complete_subst(
@@ -740,6 +750,7 @@ impl Proof {
         ensures
             res.deep_view() <==> self.deep_view().spec_head(),
     {
+        proof { axiom_proof_deep_view(self) };
         match self {
             Proof::Pstep(rule, s, branches) => rule.subst(s).head,
             Proof::QED(p) => p.clone(),
@@ -795,9 +806,10 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             #![auto]
             0 <= j < args.len() ==> args[j].deep_view().val
                 == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j])) ==> res.is_Ok()),
-        res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
-            && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val
-            == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
+        res matches Ok(thm) ==> 
+            rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
+            && thm.deep_view().spec_wf(rs.deep_view()) 
+            && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
 {
     let r = rs.rs[k].clone();
     if args.len() != r.body.len() || !r.complete_subst(&s) {
@@ -824,13 +836,15 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
         for i in 0..args.len()
             invariant
                 0 <= i <= args.len(),
-
         {
             pfs.push(args[i].p.clone())
         }
         let p = Proof::Pstep(r.clone(), s.clone(), pfs);
-        //assert(r_subst.deep_view().head == r.deep_view().spec_subst(s.deep_view()).head);
-        Ok(Thm { val: r.subst(&s).head, p: p })
+        let thm = Thm { val: r_subst.head, p: p };
+        assert(rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()));
+        assert(thm.deep_view().spec_wf(rs.deep_view()));
+        assert(thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head);
+        Ok(thm)
     } else {
         Err(())
     }
