@@ -9,12 +9,12 @@ verus! {
 pub enum Const {
     Atom(String),
     Nat(u64),
-    Str(String),  
+    Str(String),
 }
 
 impl PartialEq for Const {
-  // Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
-  //Must call const_eq for Atoms and Strs
+    // Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -60,13 +60,13 @@ impl Clone for Const {
 
 pub enum SpecConst {
     Atom(Seq<char>),
-    Nat(u64),  
+    Nat(u64),
     Str(Seq<char>),
-    
 }
 
-impl DeepView for Const {  
+impl DeepView for Const {
     type V = SpecConst;
+
     // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
@@ -76,8 +76,10 @@ impl DeepView for Const {
         }
     }
 }
+
 // Utilizing StringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
 type Subst = StringHashMap<Const>;
+
 // Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
 
@@ -97,6 +99,7 @@ pub enum SpecTerm {
 
 impl DeepView for Term {
     type V = SpecTerm;
+
     // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
@@ -119,7 +122,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-  // Function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    // Function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -159,7 +162,7 @@ impl SpecTerm {
 }
 
 impl Term {
-  // function proves equality for Term types
+    // function proves equality for Term types
     pub fn term_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -171,8 +174,10 @@ impl Term {
         }
     }
 
-    pub fn complete_subst(self, s: &Subst) -> (res: bool)
+    pub fn complete_subst(self, s: &Subst) -> (res:
+        bool)
     // function checks whether Term items are either Const or are Vars with a key in the Subst StringHashMap
+
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
     {
@@ -231,7 +236,8 @@ pub enum SpecProp {
 
 impl DeepView for Prop {
     type V = SpecProp;
-     // deep_view allows for reasoning about spec-level data structures and types while in exec mode
+
+    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Prop::App(s, v) => SpecProp::App(s.view(), v.deep_view()),
@@ -254,7 +260,7 @@ impl Clone for Prop {
 }
 
 impl PartialEq for Prop {
-  // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
+    // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -268,15 +274,13 @@ impl PartialEq for Prop {
 }
 
 impl SpecProp {
-  // function checks if Prop variants contain key to map; calls spec_complete_subst from Term
+    // function checks if Prop variants contain key to map; calls spec_complete_subst from Term
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
                 0 <= i < args.len() ==> args[i].spec_complete_subst(s),
-            SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(
-                s,
-            )
+            SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(s),
         }
     }
 
@@ -310,6 +314,7 @@ impl SpecProp {
             }
         }
     }
+
     // reasons about substitution of SpecProp variants
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
         recommends
@@ -326,7 +331,7 @@ impl SpecProp {
 }
 
 impl Prop {
-  // proves equality for Prop types. uses term_eq and terms_eq
+    // proves equality for Prop types. uses term_eq and terms_eq
     pub fn prop_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -337,6 +342,7 @@ impl Prop {
             _ => false,
         }
     }
+
     // function checks whether Prop variants are concrete and elements are equal to each other
     pub fn valid(self) -> (res: bool)
         requires
@@ -417,9 +423,7 @@ impl Prop {
                 }
                 flag
             },
-            Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(
-                s,
-            )
+            Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(s),
         }
     }
 
@@ -675,19 +679,22 @@ pub enum SpecProof {
 
 impl DeepView for Proof {
     type V = SpecProof;
+
     closed spec fn deep_view(&self) -> Self::V;
 }
 
 #[verifier::external_body]
 pub proof fn axiom_proof_deep_view(pf: &Proof)
-    ensures 
-        pf matches Proof::Pstep(r, s, v) ==> 
-          (#[trigger] pf.deep_view()) matches SpecProof::Pstep(spec_r, spec_s, spec_v)
-          && r.deep_view() == spec_r && s.deep_view() == spec_s && v.deep_view() == spec_v,
-        pf matches Proof::QED(p) ==> 
-          pf.deep_view() matches SpecProof::QED(spec_p)
-          && p.deep_view() == spec_p,
-{}
+    ensures
+        pf matches Proof::Pstep(r, s, v) ==> (#[trigger] pf.deep_view()) matches SpecProof::Pstep(
+            spec_r,
+            spec_s,
+            spec_v,
+        ) && r.deep_view() == spec_r && s.deep_view() == spec_s && v.deep_view() == spec_v,
+        pf matches Proof::QED(p) ==> pf.deep_view() matches SpecProof::QED(spec_p) && p.deep_view()
+            == spec_p,
+{
+}
 
 impl PartialEq for Proof {
     fn eq(&self, other: &Self) -> bool {
@@ -750,7 +757,8 @@ impl Proof {
         ensures
             res.deep_view() <==> self.deep_view().spec_head(),
     {
-        proof { axiom_proof_deep_view(self) };
+        proof { axiom_proof_deep_view(self) }
+        ;
         match self {
             Proof::Pstep(rule, s, branches) => rule.subst(s).head,
             Proof::QED(p) => p.clone(),
@@ -806,10 +814,9 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             #![auto]
             0 <= j < args.len() ==> args[j].deep_view().val
                 == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j])) ==> res.is_Ok()),
-        res matches Ok(thm) ==> 
-            rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
-            && thm.deep_view().spec_wf(rs.deep_view()) 
-            && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
+        res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
+            && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val
+            == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
 {
     let r = rs.rs[k].clone();
     assert(rs.deep_view().rs[k as int] == r.deep_view());
@@ -839,15 +846,21 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             invariant
                 pfs.len() == i,
                 0 <= i <= args.len(),
-                forall |j: int| #![auto] 0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()), 
-                forall |j: int| #![auto] 0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head()
+                forall|j: int|
+                    #![auto]
+                    0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
+                forall|j: int|
+                    #![auto]
+                    0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
         {
             pfs.push(args[i].p.clone());
-            proof { axiom_proof_deep_view(&args[i as int].p) };
+            proof { axiom_proof_deep_view(&args[i as int].p) }
+            ;
         }
         let p = Proof::Pstep(r.clone(), s.clone(), pfs);
         let thm = Thm { val: r_subst.head, p: p };
-        proof { axiom_proof_deep_view(&p) };
+        proof { axiom_proof_deep_view(&p) }
+        ;
         Ok(thm)
     } else {
         Err(())
