@@ -5,33 +5,37 @@ use std::collections::HashMap;
 
 verus!{
 
-#[verifier::external_type_specification]
-#[verifier::external_body]
-pub struct ExRandomState(RandomState);
+// #[verifier::external_type_specification]
+// #[verifier::external_body]
+// pub struct ExRandomState(RandomState);
     
 
-// We now specify the behavior of `HashMap`.
-#[verifier::external_type_specification]
-#[verifier::external_body]
-#[verifier::reject_recursive_types(Key)]
-#[verifier::reject_recursive_types(Value)]
-#[verifier::reject_recursive_types(S)]
-pub struct ExHashMap<Key, Value, S>(HashMap<Key, Value, S>);
+// // We now specify the behavior of `HashMap`.
+// #[verifier::external_type_specification]
+// #[verifier::external_body]
+// #[verifier::reject_recursive_types(Key)]
+// #[verifier::reject_recursive_types(Value)]
+// #[verifier::reject_recursive_types(S)]
+// pub struct ExHashMap<Key, Value, S>(HashMap<Key, Value, S>);
 
+
+// For now, we cannot use the vstd StringHashMap, since it doesn't have
+// impl Clone, impl DeepView, or impl PartialEq.
+// TODO(pratap): add those impls to the stdlib type, or find a better workaround
 
 #[verifier::ext_equal]
 #[verifier::reject_recursive_types(Value)]
-pub struct StringHashMap<Value> {
+pub struct TmpStringHashMap<Value> {
     m: HashMap<String, Value>,
 }
 
-impl<Value> View for StringHashMap<Value> {
+impl<Value> View for TmpStringHashMap<Value> {
     type V = Map<Seq<char>, Value>;
 
     closed spec fn view(&self) -> Self::V;
 }
 
-impl<Value> DeepView for StringHashMap<Value> 
+impl<Value> DeepView for TmpStringHashMap<Value> 
     where Value: DeepView
 {
     type V = Map<Seq<char>, <Value as DeepView>::V>;
@@ -44,13 +48,13 @@ impl<Value> DeepView for StringHashMap<Value>
 }
 
 
-impl<Value:PartialEq> PartialEq for StringHashMap<Value> {
+impl<Value:PartialEq> PartialEq for TmpStringHashMap<Value> {
     fn eq(&self, other :&Self) -> bool{
         self.m == other.m
     } 
 }
 
-impl<Value: Clone + DeepView> Clone for StringHashMap<Value> {
+impl<Value: Clone + DeepView> Clone for TmpStringHashMap<Value> {
     #[verifier::external_body]
     fn clone(&self) -> (res: Self) 
         ensures self.deep_view() == res.deep_view()
@@ -59,7 +63,7 @@ impl<Value: Clone + DeepView> Clone for StringHashMap<Value> {
     }
 }
 
-impl<Value> StringHashMap<Value> {
+impl<Value> TmpStringHashMap<Value> {
     #[verifier::external_body]
     pub fn new() -> (result: Self)
         ensures
@@ -131,7 +135,7 @@ impl<Value> StringHashMap<Value> {
     }
 }
 
-pub broadcast proof fn axiom_string_hash_map_spec_len<Value>(m: &StringHashMap<Value>)
+pub broadcast proof fn axiom_string_hash_map_spec_len<Value>(m: &TmpStringHashMap<Value>)
     ensures
         #[trigger] m.spec_len() == m@.len(),
 {
@@ -150,8 +154,8 @@ verus!{
 
 fn test()
 {
-    let mut m = StringHashMap::<i8>::new();
-    let mut n = StringHashMap::<i8>::new();
+    let mut m = TmpStringHashMap::<i8>::new();
+    let mut n = TmpStringHashMap::<i8>::new();
     assert(m@ == Map::<Seq<char>, i8>::empty());
     assert(n@ == Map::<Seq<char>, i8>::empty());
 
