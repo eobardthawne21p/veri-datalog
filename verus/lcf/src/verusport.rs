@@ -78,8 +78,10 @@ impl DeepView for Const {
         }
     }
 }
+
 // Utilizing StringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
 type Subst = StringHashMap<Const>;
+
 // Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
 
@@ -125,7 +127,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-  // function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+  //function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -139,17 +141,19 @@ impl PartialEq for Term {
 }
 
 impl SpecTerm {
+  //spec function returns true if the map contains the key when it a Var variant, or if it is Const variant
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecTerm::Var(v) => s.contains_key(v),
             SpecTerm::Const(_) => true,
         }
     }
-
+    // spec function checks if SpecTerm is a base type
     pub open spec fn spec_concrete(self) -> bool {
         self is Const
     }
 
+    //spec function reasons about substitution from Var variants to Const or does nothing if it is a Const variant
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecTerm)
         recommends
             self.spec_complete_subst(s),
@@ -216,7 +220,9 @@ impl Term {
     }
 }
 
-# [verifier::external_body]
+//#[verifier::external_body] needed because the verifier does not support the equality relation we are trying to leverage
+#[verifier::external_body]
+//function checks whether 2 Vec<Term>s are equal or not
 pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
     ensures
         res <==> a.deep_view() == b.deep_view(),
@@ -276,7 +282,7 @@ impl PartialEq for Prop {
 }
 
 impl SpecProp {
-  // function checks if Prop variants contain key to map; calls spec_complete_subst from Term
+  //spec function checks if Prop variants contain key to map; calls spec_complete_subst from Term
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -288,7 +294,7 @@ impl SpecProp {
         }
     }
 
-    // checks if Prop variants are of base types
+    // spec function checks if Prop variants are of base types
     pub open spec fn spec_concrete(self) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -297,12 +303,12 @@ impl SpecProp {
             SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
         }
     }
-
+    //spec function if SpecProp is an App variant
     pub open spec fn spec_symbolic(self) -> bool {
         self is App
     }
 
-    // function checks whether valid SpecProp types are concrete and are equal
+    //spec function checks whether valid SpecProp types are concrete and are equal
     pub open spec fn spec_valid(self) -> bool {
         if self.spec_symbolic() == true || self.spec_concrete() == false {
             false
@@ -318,7 +324,8 @@ impl SpecProp {
             }
         }
     }
-    // reasons about substitution of SpecProp variants
+
+    // spec function reasons about substitution of SpecProp variants to SpecTerms
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
         recommends
             self.spec_complete_subst(s),
@@ -334,7 +341,7 @@ impl SpecProp {
 }
 
 impl Prop {
-  // proves equality for Prop types. uses term_eq and terms_eq
+  //function proves equality for Prop types. uses term_eq and terms_eq
     pub fn prop_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -345,6 +352,7 @@ impl Prop {
             _ => false,
         }
     }
+
     // function checks whether Prop variants are concrete and elements are equal to each other
     pub fn valid(self) -> (res: bool)
         requires
@@ -363,6 +371,7 @@ impl Prop {
         }
     }
 
+    //function checks whether Prop is an App variant
     pub fn symbolic(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_symbolic(),
@@ -373,7 +382,7 @@ impl Prop {
         }
     }
 
-    //checks whether Prop variants are base types
+    //function checks whether Prop variants are base types
     pub fn concrete(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -401,7 +410,7 @@ impl Prop {
         }
     }
 
-    // checks if Prop variants contain key in Susbt StringHashMap
+    //function checks if Prop variants contain key in Susbt StringHashMap
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -489,13 +498,14 @@ pub struct SpecRule {
 
 impl DeepView for Rule {
     type V = SpecRule;
-
+    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecRule { head: self.head.deep_view(), body: self.body.deep_view(), id: self.id }
     }
 }
 
 impl PartialEq for Rule {
+    // function alows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -518,21 +528,25 @@ impl Clone for Rule {
 }
 
 impl SpecRule {
+    //spec function checks all items in SpecRule for being complete substitutions in SpecSubst
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         &&& self.head.spec_complete_subst(s)
         &&& forall|i: int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_complete_subst(s)
     }
 
+    //spec function checks if SpecRule contains items that are all base types
     pub open spec fn spec_concrete(self) -> bool {
         self.head.spec_concrete() && forall|i: int|
             #![auto]
             0 <= i < self.body.len() ==> self.body[i].spec_concrete()
     }
 
+    //spec function checks if SpecRule's SpecProp item is of type App before being entered into SpecRuleset
     pub open spec fn spec_wf(self) -> bool {
         self.head.spec_symbolic()
     }
 
+    //spec function reasons about a substitution for SpecRule to SpecProp
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecRule)
         recommends
             self.spec_complete_subst(s),
@@ -544,6 +558,7 @@ impl SpecRule {
 }
 
 impl Rule {
+    //function performs a substition from type Rule to Prop
     pub fn subst(&self, s: &Subst) -> (res: Rule)
         requires
             self.deep_view().spec_complete_subst(s.deep_view()),
@@ -580,6 +595,7 @@ impl Rule {
         result
     }
 
+    //function checks if all items in Rule are complete substitutions
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -602,6 +618,7 @@ impl Rule {
         }
     }
 
+    //function checks whether Rule type contains only base types
     pub fn concrete(&self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -624,6 +641,7 @@ impl Rule {
         }
     }
 
+    //function checks if Rule contains App variants before adding it to Ruleset
     pub fn wf(&self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_wf(),
@@ -643,18 +661,21 @@ pub struct SpecRuleSet {
 impl DeepView for RuleSet {
     type V = SpecRuleSet;
 
+    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecRuleSet { rs: self.rs.deep_view() }
     }
 }
 
 impl SpecRuleSet {
+    //spec function checks if all items in SpecRuleset are well-formed
     pub open spec fn spec_wf(self) -> bool {
         forall|i: int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
     }
 }
 
 impl RuleSet {
+    //function checks whether all items in RuleSet are well-formed
     pub fn wf(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_wf(),
@@ -689,7 +710,9 @@ impl DeepView for Proof {
     closed spec fn deep_view(&self) -> Self::V;
 }
 
-#[verifier::external_body]
+//#[verifier::external_body] needed due to postocondition failing on lines 716 and 719
+#[verifier::external_body] 
+//function allows us to reason about deep_view 
 pub proof fn axiom_proof_deep_view(pf: &Proof)
     ensures 
         pf matches Proof::Pstep(r, s, v) ==> 
@@ -864,6 +887,44 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
         Err(())
     }
 }
+
+pub fn tst_connected() -> (res: RuleSet) {
+  RuleSet {rs: [Rule { head: Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec()), body: [Prop::App("edge".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec())].to_vec(), id: 0 },
+   Rule { head: Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("c".to_string())].to_vec()), body: [Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec()), Prop::App("edge".to_string(), [Term::Var("b".to_string()), Term::Var("c".to_string())].to_vec())].to_vec(), id: 1 },
+   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("x".to_string())), Term::Const(Const::Atom("y".to_string()))].to_vec()), body: [].to_vec(), id: 2 },
+   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("x".to_string())), Term::Const(Const::Atom("f".to_string()))].to_vec()), body: [].to_vec(), id: 3 },
+   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("y".to_string())), Term::Const(Const::Atom("z".to_string()))].to_vec()), body: [].to_vec(), id: 4 },
+   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("z".to_string())), Term::Const(Const::Atom("w".to_string()))].to_vec()), body: [].to_vec(), id: 5 }
+   ].to_vec() }
+}
+
+/* pub fn tst_connected_thm() : Result<Thm, Err> {
+  var rs := tst_connected();
+
+  var s1 : Subst := map["a" := Atom("x"), "b" := Atom("y")];
+  var thm1 := mk_thm(rs, 0, s1, []);
+
+  var s2 : Subst := map["a" := Atom("x"), "c" := Atom("y")];
+  var thm2 := mk_thm(rs, 1, s2, []);
+
+  var s3 : Subst := map["a" := Atom("y"), "b" := Atom("z")];
+  var thm3 := mk_thm(rs, 0, s3, []);
+
+  var s4 : Subst := map["a" := Atom("x"), "c" := Atom("z")];
+  var thm4 := mk_thm(rs, 1, s4, []);
+
+  var s5 : Subst := map["a" := Atom("z"), "b" := Atom("w")];
+  var thm5 := mk_thm(rs, 0, s5, []);
+
+  var s6 : Subst := map["a" := Atom("x"), "c" := Atom("w")];
+  var thm6 := mk_thm(rs, 1, s6, []);
+
+
+    match thm6 {
+        Ok(val) => Ok(val)
+        Err => Err(())
+    }
+} */
 
 
 fn main() {
