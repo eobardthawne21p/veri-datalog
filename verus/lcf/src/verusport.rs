@@ -920,75 +920,75 @@ pub fn tst_connected() -> (res: RuleSet) {
             Rule {
                 head: Prop::App(
                     "connected".to_string(),
-                    [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                    vec![Term::Var("a".to_string()), Term::Var("b".to_string())],
                 ),
-                body: [
+                body: vec![
                     Prop::App(
                         "edge".to_string(),
-                        [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                        vec![Term::Var("a".to_string()), Term::Var("b".to_string())],
                     ),
-                ].to_vec(),
+                ],
                 id: 0,
             },
             Rule {
                 head: Prop::App(
                     "connected".to_string(),
-                    [Term::Var("a".to_string()), Term::Var("c".to_string())].to_vec(),
+                    vec![Term::Var("a".to_string()), Term::Var("c".to_string())],
                 ),
-                body: [
+                body: vec![
                     Prop::App(
                         "connected".to_string(),
-                        [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                        vec![Term::Var("a".to_string()), Term::Var("b".to_string())],
                     ),
                     Prop::App(
                         "edge".to_string(),
-                        [Term::Var("b".to_string()), Term::Var("c".to_string())].to_vec(),
+                        vec![Term::Var("b".to_string()), Term::Var("c".to_string())],
                     ),
-                ].to_vec(),
+                ],
                 id: 1,
             },
             Rule {
                 head: Prop::App(
                     "edge".to_string(),
-                    [
+                    vec![
                         Term::Const(Const::Atom("x".to_string())),
                         Term::Const(Const::Atom("y".to_string())),
-                    ].to_vec(),
+                    ],
                 ),
-                body: [].to_vec(),
+                body: vec![],
                 id: 2,
             },
             Rule {
                 head: Prop::App(
                     "edge".to_string(),
-                    [
+                    vec![
                         Term::Const(Const::Atom("x".to_string())),
                         Term::Const(Const::Atom("f".to_string())),
-                    ].to_vec(),
+                    ],
                 ),
-                body: [].to_vec(),
+                body: vec![],
                 id: 3,
             },
             Rule {
                 head: Prop::App(
                     "edge".to_string(),
-                    [
+                    vec![
                         Term::Const(Const::Atom("y".to_string())),
                         Term::Const(Const::Atom("z".to_string())),
-                    ].to_vec(),
+                    ],
                 ),
-                body: [].to_vec(),
+                body: vec![],
                 id: 4,
             },
             Rule {
                 head: Prop::App(
                     "edge".to_string(),
-                    [
+                    vec![
                         Term::Const(Const::Atom("z".to_string())),
                         Term::Const(Const::Atom("w".to_string())),
-                    ].to_vec(),
+                    ],
                 ),
-                body: [].to_vec(),
+                body: vec![],
                 id: 5,
             },
         ],
