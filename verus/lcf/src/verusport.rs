@@ -3,18 +3,17 @@ use vstd::assert_seqs_equal;
 use vstd::prelude::*;
 use vstd::seq::Seq;
 
-
 verus! {
 
 pub enum Const {
     Atom(String),
     Nat(u64),
-    Str(String),  
+    Str(String),
 }
 
 impl PartialEq for Const {
-  //Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
-  //Must call const_eq for Atoms and Strs
+    //Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -46,8 +45,8 @@ impl Const {
 }
 
 impl Clone for Const {
-  //clone function for Const types explicitly copies and instantiates the original value so that it fixes borrowing errors.
-  //It is needed when you want to borrow a value that will produce an error when you try to 
+    //clone function for Const types explicitly copies and instantiates the original value so that it fixes borrowing errors.
+    //It is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -62,13 +61,13 @@ impl Clone for Const {
 
 pub enum SpecConst {
     Atom(Seq<char>),
-    Nat(u64),  
+    Nat(u64),
     Str(Seq<char>),
-    
 }
 
-impl DeepView for Const {  
+impl DeepView for Const {
     type V = SpecConst;
+
     // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
@@ -103,6 +102,7 @@ pub enum SpecTerm {
 
 impl DeepView for Term {
     type V = SpecTerm;
+
     // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
@@ -113,8 +113,8 @@ impl DeepView for Term {
 }
 
 impl Clone for Term {
-  //clone function for Term types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-  //It is needed when you want to borrow a value that will produce an error when you try to 
+    //clone function for Term types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //It is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -127,7 +127,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-  //function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -141,13 +141,14 @@ impl PartialEq for Term {
 }
 
 impl SpecTerm {
-  //spec function returns true if the map contains the key when it a Var variant, or if it is Const variant
+    //spec function returns true if the map contains the key when it a Var variant, or if it is Const variant
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecTerm::Var(v) => s.contains_key(v),
             SpecTerm::Const(_) => true,
         }
     }
+
     // spec function checks if SpecTerm is a base type
     pub open spec fn spec_concrete(self) -> bool {
         self is Const
@@ -169,7 +170,7 @@ impl SpecTerm {
 }
 
 impl Term {
-  // function proves equality for Term types
+    // function proves equality for Term types
     pub fn term_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -180,6 +181,7 @@ impl Term {
             _ => false,
         }
     }
+
     // function checks whether Term items are either Const or are Vars with a key in the Subst StringHashMap
     pub fn complete_subst(self, s: &Subst) -> (res: bool)
         ensures
@@ -242,7 +244,8 @@ pub enum SpecProp {
 
 impl DeepView for Prop {
     type V = SpecProp;
-     // deep_view allows for reasoning about spec-level data structures and types while in exec mode
+
+    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Prop::App(s, v) => SpecProp::App(s.view(), v.deep_view()),
@@ -252,10 +255,10 @@ impl DeepView for Prop {
 }
 
 impl Clone for Prop {
-  //#[verifier::external_body] needed to satisfy postcondition on line 253.
+    //#[verifier::external_body] needed to satisfy postcondition on line 253.
     #[verifier::external_body]
     //clone function for Prop types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to 
+    //It is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -268,7 +271,7 @@ impl Clone for Prop {
 }
 
 impl PartialEq for Prop {
-  // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
+    // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -282,15 +285,13 @@ impl PartialEq for Prop {
 }
 
 impl SpecProp {
-  //spec function checks if Prop variants contain key to map; calls spec_complete_subst from Term
+    //spec function checks if Prop variants contain key to map; calls spec_complete_subst from Term
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
                 0 <= i < args.len() ==> args[i].spec_complete_subst(s),
-            SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(
-                s,
-            )
+            SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(s),
         }
     }
 
@@ -303,6 +304,7 @@ impl SpecProp {
             SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
         }
     }
+
     //spec function if SpecProp is an App variant
     pub open spec fn spec_symbolic(self) -> bool {
         self is App
@@ -341,7 +343,7 @@ impl SpecProp {
 }
 
 impl Prop {
-  //function proves equality for Prop types. uses term_eq and terms_eq
+    //function proves equality for Prop types. uses term_eq and terms_eq
     pub fn prop_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -434,9 +436,7 @@ impl Prop {
                 }
                 flag
             },
-            Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(
-                s,
-            )
+            Prop::Eq(x, y) => x.clone().complete_subst(s) && y.clone().complete_subst(s),
         }
     }
 
@@ -498,6 +498,7 @@ pub struct SpecRule {
 
 impl DeepView for Rule {
     type V = SpecRule;
+
     // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecRule { head: self.head.deep_view(), body: self.body.deep_view(), id: self.id }
@@ -515,10 +516,10 @@ impl PartialEq for Rule {
 }
 
 impl Clone for Rule {
-  //#[verifier::external_body] needed to satisfy postcondition on line 513
-   #[verifier::external_body]
+    //#[verifier::external_body] needed to satisfy postcondition on line 513
+    #[verifier::external_body]
     //clone function for Rule types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to 
+    //It is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -707,21 +708,24 @@ pub enum SpecProof {
 
 impl DeepView for Proof {
     type V = SpecProof;
+
     closed spec fn deep_view(&self) -> Self::V;
 }
 
 //#[verifier::external_body] needed due to postocondition failing on lines 716 and 719
-#[verifier::external_body] 
-//function allows us to reason about deep_view 
+#[verifier::external_body]
+//function allows us to reason about deep_view
 pub proof fn axiom_proof_deep_view(pf: &Proof)
-    ensures 
-        pf matches Proof::Pstep(r, s, v) ==> 
-          (#[trigger] pf.deep_view()) matches SpecProof::Pstep(spec_r, spec_s, spec_v)
-          && r.deep_view() == spec_r && s.deep_view() == spec_s && v.deep_view() == spec_v,
-        pf matches Proof::QED(p) ==> 
-          pf.deep_view() matches SpecProof::QED(spec_p)
-          && p.deep_view() == spec_p,
-{}
+    ensures
+        pf matches Proof::Pstep(r, s, v) ==> (#[trigger] pf.deep_view()) matches SpecProof::Pstep(
+            spec_r,
+            spec_s,
+            spec_v,
+        ) && r.deep_view() == spec_r && s.deep_view() == spec_s && v.deep_view() == spec_v,
+        pf matches Proof::QED(p) ==> pf.deep_view() matches SpecProof::QED(spec_p) && p.deep_view()
+            == spec_p,
+{
+}
 
 impl PartialEq for Proof {
     fn eq(&self, other: &Self) -> bool {
@@ -738,7 +742,7 @@ impl Clone for Proof {
     //#[verifier::external_body] needed because the verifier thinks it found a cycle on line 723 with v.clone()
     #[verifier::external_body]
     //clone function for Proof types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to 
+    //It is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -787,7 +791,8 @@ impl Proof {
         ensures
             res.deep_view() <==> self.deep_view().spec_head(),
     {
-        proof { axiom_proof_deep_view(self) };
+        proof { axiom_proof_deep_view(self) }
+        ;
         match self {
             Proof::Pstep(rule, s, branches) => rule.subst(s).head,
             Proof::QED(p) => p.clone(),
@@ -843,10 +848,9 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             #![auto]
             0 <= j < args.len() ==> args[j].deep_view().val
                 == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).body[j])) ==> res.is_Ok()),
-        res matches Ok(thm) ==> 
-            rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
-            && thm.deep_view().spec_wf(rs.deep_view()) 
-            && thm.deep_view().val == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
+        res matches Ok(thm) ==> rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view())
+            && thm.deep_view().spec_wf(rs.deep_view()) && thm.deep_view().val
+            == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
 {
     let r = rs.rs[k].clone();
     assert(rs.deep_view().rs[k as int] == r.deep_view());
@@ -873,62 +877,109 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             invariant
                 pfs.len() == i,
                 0 <= i <= args.len(),
-                forall |j: int| #![auto] 0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()), 
-                forall |j: int| #![auto] 0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head()
+                forall|j: int|
+                    #![auto]
+                    0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
+                forall|j: int|
+                    #![auto]
+                    0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
         {
             pfs.push(args[i].p.clone());
-            proof { axiom_proof_deep_view(&args[i as int].p) };
+            proof { axiom_proof_deep_view(&args[i as int].p) }
+            ;
         }
         let p = Proof::Pstep(r.clone(), s.clone(), pfs);
         let thm = Thm { val: r_subst.head, p: p };
-        proof { axiom_proof_deep_view(&p) };
+        proof { axiom_proof_deep_view(&p) }
+        ;
         Ok(thm)
     } else {
         Err(())
     }
 }
 
-pub fn tst_connected() -> (res: RuleSet) {
-  RuleSet {rs: [Rule { head: Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec()), body: [Prop::App("edge".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec())].to_vec(), id: 0 },
-   Rule { head: Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("c".to_string())].to_vec()), body: [Prop::App("connected".to_string(), [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec()), Prop::App("edge".to_string(), [Term::Var("b".to_string()), Term::Var("c".to_string())].to_vec())].to_vec(), id: 1 },
-   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("x".to_string())), Term::Const(Const::Atom("y".to_string()))].to_vec()), body: [].to_vec(), id: 2 },
-   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("x".to_string())), Term::Const(Const::Atom("f".to_string()))].to_vec()), body: [].to_vec(), id: 3 },
-   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("y".to_string())), Term::Const(Const::Atom("z".to_string()))].to_vec()), body: [].to_vec(), id: 4 },
-   Rule { head: Prop::App("edge".to_string(), [Term::Const(Const::Atom("z".to_string())), Term::Const(Const::Atom("w".to_string()))].to_vec()), body: [].to_vec(), id: 5 }
-   ].to_vec() }
-}
-
-/* pub fn tst_connected_thm() : Result<Thm, Err> {
-  var rs := tst_connected();
-
-  var s1 : Subst := map["a" := Atom("x"), "b" := Atom("y")];
-  var thm1 := mk_thm(rs, 0, s1, []);
-
-  var s2 : Subst := map["a" := Atom("x"), "c" := Atom("y")];
-  var thm2 := mk_thm(rs, 1, s2, []);
-
-  var s3 : Subst := map["a" := Atom("y"), "b" := Atom("z")];
-  var thm3 := mk_thm(rs, 0, s3, []);
-
-  var s4 : Subst := map["a" := Atom("x"), "c" := Atom("z")];
-  var thm4 := mk_thm(rs, 1, s4, []);
-
-  var s5 : Subst := map["a" := Atom("z"), "b" := Atom("w")];
-  var thm5 := mk_thm(rs, 0, s5, []);
-
-  var s6 : Subst := map["a" := Atom("x"), "c" := Atom("w")];
-  var thm6 := mk_thm(rs, 1, s6, []);
-
-
-    match thm6 {
-        Ok(val) => Ok(val)
-        Err => Err(())
+/* pub fn tst_connected() -> (res: RuleSet) {
+    RuleSet {
+        rs: [
+            Rule {
+                head: Prop::App(
+                    "connected".to_string(),
+                    [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                ),
+                body: [
+                    Prop::App(
+                        "edge".to_string(),
+                        [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                    ),
+                ].to_vec(),
+                id: 0,
+            },
+            Rule {
+                head: Prop::App(
+                    "connected".to_string(),
+                    [Term::Var("a".to_string()), Term::Var("c".to_string())].to_vec(),
+                ),
+                body: [
+                    Prop::App(
+                        "connected".to_string(),
+                        [Term::Var("a".to_string()), Term::Var("b".to_string())].to_vec(),
+                    ),
+                    Prop::App(
+                        "edge".to_string(),
+                        [Term::Var("b".to_string()), Term::Var("c".to_string())].to_vec(),
+                    ),
+                ].to_vec(),
+                id: 1,
+            },
+            Rule {
+                head: Prop::App(
+                    "edge".to_string(),
+                    [
+                        Term::Const(Const::Atom("x".to_string())),
+                        Term::Const(Const::Atom("y".to_string())),
+                    ].to_vec(),
+                ),
+                body: [].to_vec(),
+                id: 2,
+            },
+            Rule {
+                head: Prop::App(
+                    "edge".to_string(),
+                    [
+                        Term::Const(Const::Atom("x".to_string())),
+                        Term::Const(Const::Atom("f".to_string())),
+                    ].to_vec(),
+                ),
+                body: [].to_vec(),
+                id: 3,
+            },
+            Rule {
+                head: Prop::App(
+                    "edge".to_string(),
+                    [
+                        Term::Const(Const::Atom("y".to_string())),
+                        Term::Const(Const::Atom("z".to_string())),
+                    ].to_vec(),
+                ),
+                body: [].to_vec(),
+                id: 4,
+            },
+            Rule {
+                head: Prop::App(
+                    "edge".to_string(),
+                    [
+                        Term::Const(Const::Atom("z".to_string())),
+                        Term::Const(Const::Atom("w".to_string())),
+                    ].to_vec(),
+                ),
+                body: [].to_vec(),
+                id: 5,
+            },
+        ].to_vec(),
     }
-} */
-
+}*/
 
 fn main() {
-
 }
 
 } // verus!
