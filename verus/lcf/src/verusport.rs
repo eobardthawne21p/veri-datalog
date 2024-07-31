@@ -914,6 +914,7 @@ edge("y", "z").
 edge("z", "w").
 */ 
 
+//function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
 pub fn tst_connected() -> (res: RuleSet) {
     RuleSet {
         rs: vec![
@@ -994,6 +995,53 @@ pub fn tst_connected() -> (res: RuleSet) {
         ],
     }
 }
+
+pub fn tst_connected_thm() -> (res: Result<Thm, ()> ){
+  let rs = tst_connected();
+  let mut s1 = TmpStringHashMap::<Const>::new();
+  s1.insert("a" = Const::Atom("x".to_string()), Const::Nat(1));
+  s1.insert("b" = Const::Atom("y".to_string()), Const::Nat(2));
+  //let s1 = StringHashMap(["a" = Const::Atom("x"), "b" = Const::Atom("y")]);
+  let thm1 = mk_thm(&rs, 0, &s1, &vec![]);
+
+  let mut s2 = TmpStringHashMap::<Const>::new();
+  s2.insert("a" = Const::Atom("x".to_string()), Const::Nat(1));
+  s2.insert("c" = Const::Atom("y".to_string()), Const::Nat(2));
+  //let s2 = Subst(["a" = Const::Atom("x"), "c" = Const::Atom("y")]);
+  let thm2 = mk_thm(&rs, 1, &s2, &vec![]);
+
+  let mut s3 = TmpStringHashMap::<Const>::new();
+  s3.insert("a" = Const::Atom("y".to_string()), Const::Nat(1));
+  s3.insert("b" = Const::Atom("z".to_string()), Const::Nat(2));
+  //let s3 = Subst(["a" = Const::Atom("y"), "b" = Const::Atom("z")]);
+  let thm3 = mk_thm(&rs, 0, &s3, &vec![]);
+
+  let mut s4 = TmpStringHashMap::<Const>::new();
+  s4.insert("a" = Const::Atom("x".to_string()), Const::Nat(1));
+  s4.insert("c" = Const::Atom("z".to_string()), Const::Nat(2));
+  //let s4 = Subst(["a" = Const::Atom("x"), "c" = Const::Atom("z")]);
+  let thm4 = mk_thm(&rs, 1, &s4, &vec![]);
+
+  let mut s5 = TmpStringHashMap::<Const>::new();
+  s5.insert("a" = Const::Atom("z".to_string()), Const::Nat(1));
+  s5.insert("b" = Const::Atom("w".to_string()), Const::Nat(2));
+  //let s5 = Subst(["a" = Const::Atom("z"), "b" = Const::Atom("w")]);
+  let thm5 = mk_thm(&rs, 0, &s5, &vec![]);
+
+  let mut s6 = TmpStringHashMap::<Const>::new();
+  s6.insert(""a" = Const::Atom("x".to_string())", Const::Nat(1));
+  s6.insert("c" = Const::Atom("w".to_string()), Const::Nat(2));
+  //let s6 = Subst(["a" = Const::Atom("x"), "c" = Const::Atom("w")]);
+  let thm6 = mk_thm(&rs, 1, &s6, &vec![]);
+
+
+  match thm6 {
+      Ok(val) => Ok(val),
+      Err(_) => Err(())
+  }
+}
+
+
 
 fn main() {
 }
