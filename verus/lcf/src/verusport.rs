@@ -1,4 +1,4 @@
-use crate::string_hash_map::StringHashMap;
+use crate::string_hash_map::TmpStringHashMap;
 use vstd::assert_seqs_equal;
 use vstd::prelude::*;
 use vstd::seq::Seq;
@@ -78,8 +78,8 @@ impl DeepView for Const {
     }
 }
 
-// Utilizing StringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
-type Subst = StringHashMap<Const>;
+// Utilizing TmpStringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
+type Subst = TmpStringHashMap<Const>;
 
 // Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
@@ -182,7 +182,7 @@ impl Term {
         }
     }
 
-    // function checks whether Term items are either Const or are Vars with a key in the Subst StringHashMap
+    // function checks whether Term items are either Const or are Vars with a key in the Subst TmpStringHashMap
     pub fn complete_subst(self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -412,7 +412,7 @@ impl Prop {
         }
     }
 
-    //function checks if Prop variants contain key in Susbt StringHashMap
+    //function checks if Prop variants contain key in Susbt TmpStringHashMap
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
