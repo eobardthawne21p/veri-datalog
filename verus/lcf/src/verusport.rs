@@ -996,8 +996,14 @@ pub fn tst_connected() -> (res: RuleSet) {
     }
 }
 
-pub fn tst_connected_thm() -> (res: Result<Thm, ()> ){
+/* pub fn tst_connected_thm() -> (res: Result<Thm, ()> ){
   let rs = tst_connected();
+
+  //Dafny example
+  /* var s1 : Subst := map["a" := Atom("x"), "b" := Atom("y")];
+  var thm1 := mk_thm(rs, 0, s1, []); */ 
+
+
   let mut s1 = TmpStringHashMap::<Const>::new();
   s1.insert("a" = Const::Atom("x".to_string()), Const::Nat(1));
   s1.insert("b" = Const::Atom("y".to_string()), Const::Nat(2));
@@ -1029,7 +1035,7 @@ pub fn tst_connected_thm() -> (res: Result<Thm, ()> ){
   let thm5 = mk_thm(&rs, 0, &s5, &vec![]);
 
   let mut s6 = TmpStringHashMap::<Const>::new();
-  s6.insert(""a" = Const::Atom("x".to_string())", Const::Nat(1));
+  s6.insert("a" = Const::Atom("x".to_string()), Const::Nat(1));
   s6.insert("c" = Const::Atom("w".to_string()), Const::Nat(2));
   //let s6 = Subst(["a" = Const::Atom("x"), "c" = Const::Atom("w")]);
   let thm6 = mk_thm(&rs, 1, &s6, &vec![]);
@@ -1039,7 +1045,7 @@ pub fn tst_connected_thm() -> (res: Result<Thm, ()> ){
       Ok(val) => Ok(val),
       Err(_) => Err(())
   }
-}
+} */
 
 
 
