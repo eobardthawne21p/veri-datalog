@@ -898,6 +898,16 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
     }
 }
 
+//Edge-connectivity example using the following Datalog program:
+/* 
+connected(a, b) :- edge(a, b).
+connected(a, c) :- connected(a, b), edge(b, c).
+edge("x", "y").
+edge("x", "f").
+edge("y", "z").
+edge("z", "w").
+*/ 
+
 /* pub fn tst_connected() -> (res: RuleSet) {
     RuleSet {
         rs: [
