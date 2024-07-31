@@ -12,7 +12,7 @@ pub enum Const {
 }
 
 impl PartialEq for Const {
-    //Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //Function allows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
@@ -127,7 +127,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-    //function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //function allows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -271,7 +271,7 @@ impl Clone for Prop {
 }
 
 impl PartialEq for Prop {
-    // function aids verus verifier in reasoning baout equality; not fully sufficient - must call prop_eq for certain types
+    // function aids verus verifier in reasoning about equality; not fully sufficient - must call prop_eq for certain types
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -506,7 +506,7 @@ impl DeepView for Rule {
 }
 
 impl PartialEq for Rule {
-    // function alows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    // function allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -728,6 +728,7 @@ pub proof fn axiom_proof_deep_view(pf: &Proof)
 }
 
 impl PartialEq for Proof {
+   // function allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Proof::Pstep(a, b, c), Proof::Pstep(d, e, f)) => a == d && b == e && c == f,
@@ -755,6 +756,7 @@ impl Clone for Proof {
 }
 
 impl SpecProof {
+    //spec function checking if the Proof is valid by applying specs on its SpecRuleSet items
     pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
         decreases self,
     {
@@ -770,7 +772,7 @@ impl SpecProof {
             },
         }
     }
-
+    //spec function that reasons about the substition of the Prop element in Proof that is the Rule in Pstep and is itself in QQED
     pub open spec fn spec_head(self) -> SpecProp
         recommends
             self matches SpecProof::Pstep(rule, s, branches) ==> rule.spec_complete_subst(s),
@@ -783,6 +785,7 @@ impl SpecProof {
 }
 
 impl Proof {
+  //function that performs a substition of the Prop element in Proof that is the Rule in Pstep and is itself in QED (just clones itself in QED)
     pub fn head(&self) -> (res: Prop)
         requires
             self matches Proof::Pstep(rule, s, branches) ==> rule.deep_view().spec_complete_subst(
@@ -812,18 +815,20 @@ pub struct SpecThm {
 
 impl DeepView for Thm {
     type V = SpecThm;
-
+    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecThm { val: self.val.deep_view(), p: self.p.deep_view() }
     }
 }
 
 impl SpecThm {
+    //spec function that checks whether the SpecRuleSet is valid and if p substituted to head is equal to the val argument of the SpecThm
     pub open spec fn spec_wf(self, rule_set: SpecRuleSet) -> bool {
         self.p.spec_valid(rule_set) && self.p.spec_head() == self.val
     }
 }
 
+//function used in the thm derivation process to create terminal points on branches of proof trees
 pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
     ensures
         p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic()
@@ -838,6 +843,7 @@ pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
 }
 
 #[verifier::loop_isolation(false)]
+//function that produces a thm after being passed the Ruleset and Vec<Thm> to be used to validate predicates based on rule and fact encodings
 pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
     requires
         k < rs.rs.len(),
