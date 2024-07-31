@@ -13,7 +13,7 @@ pub enum Const {
 }
 
 impl PartialEq for Const {
-  // Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+  //Function alows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
   //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
@@ -31,7 +31,7 @@ impl PartialEq for Const {
 }
 
 impl Const {
-    // uses eq from impl Partial Eq to prove equality between items
+    // function uses eq from impl Partial Eq to prove equality between items
     pub fn const_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -46,6 +46,8 @@ impl Const {
 }
 
 impl Clone for Const {
+  //clone function for Const types explicitly copies and instantiates the original value so that it fixes borrowing errors.
+  //It is needed when you want to borrow a value that will produce an error when you try to 
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -67,7 +69,7 @@ pub enum SpecConst {
 
 impl DeepView for Const {  
     type V = SpecConst;
-    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
+    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Const::Atom(s) => SpecConst::Atom(s.view()),
@@ -81,6 +83,8 @@ type Subst = StringHashMap<Const>;
 // Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
 
+//spec function checks if all elements of one specSubst type are present in the other
+// specific triggers were chosen because auto triggers could not be determined by the verifier
 spec fn compatible_subst(s: SpecSubst, t: SpecSubst) -> bool {
     forall|v: String| (#[trigger] s[v@]) == (#[trigger] t[v@])
 }
@@ -97,7 +101,7 @@ pub enum SpecTerm {
 
 impl DeepView for Term {
     type V = SpecTerm;
-    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
+    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Term::Const(c) => SpecTerm::Const(c.deep_view()),
@@ -107,6 +111,8 @@ impl DeepView for Term {
 }
 
 impl Clone for Term {
+  //clone function for Term types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+  //It is needed when you want to borrow a value that will produce an error when you try to 
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -119,7 +125,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-  // Function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+  // function alows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -170,9 +176,8 @@ impl Term {
             _ => false,
         }
     }
-
-    pub fn complete_subst(self, s: &Subst) -> (res: bool)
     // function checks whether Term items are either Const or are Vars with a key in the Subst StringHashMap
+    pub fn complete_subst(self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
     {
@@ -241,7 +246,10 @@ impl DeepView for Prop {
 }
 
 impl Clone for Prop {
+  //#[verifier::external_body] needed to satisfy postcondition on line 253.
     #[verifier::external_body]
+    //clone function for Prop types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //It is needed when you want to borrow a value that will produce an error when you try to 
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -497,7 +505,10 @@ impl PartialEq for Rule {
 }
 
 impl Clone for Rule {
-    #[verifier::external_body]
+  //#[verifier::external_body] needed to satisfy postcondition on line 513
+   #[verifier::external_body]
+    //clone function for Rule types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //It is needed when you want to borrow a value that will produce an error when you try to 
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -701,7 +712,10 @@ impl PartialEq for Proof {
 }
 
 impl Clone for Proof {
+    //#[verifier::external_body] needed because the verifier thinks it found a cycle on line 723 with v.clone()
     #[verifier::external_body]
+    //clone function for Proof types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //It is needed when you want to borrow a value that will produce an error when you try to 
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
