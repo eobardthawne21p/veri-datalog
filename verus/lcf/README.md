@@ -6,6 +6,8 @@
 
 ## Data types of Kernel
 
+## Const types 
+
 ## Verus specific features in implementation of kernel
 
 ## deep_view
