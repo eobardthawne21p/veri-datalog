@@ -42,7 +42,7 @@ Its spec versions for SpecTerm are:
 
 Functions that can be used on Term types:
 1. (in impl DeepView for Term) open spec fn deep_view(&self) -> Self::V
-2. Iin impl Clone for Term) fn clone(&self) -> (res: Self)
+2. (in impl Clone for Term) fn clone(&self) -> (res: Self)
 3. (in impl PartialEq for Term) fn eq(&self, other: &Self) -> (res: bool)
 4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
 5. pub open spec fn spec_concrete(self) -> bool
@@ -55,7 +55,7 @@ Functions that can be used on Term types:
 ## Prop
 
 Props are the heads of rules that are used in rulesets for mk_thm.
-In this datalog line of code: connected(a, b) :- edge(a, b). , connected(a, b) is the Prop
+In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) is the Prop
 
 Prop types are enums that have 2 variants:
 1. App(String, Vec<Term>)
@@ -67,7 +67,7 @@ Its spec versionsfor SpecProp are:
 
 Functions that can be used on Prop types:
 1. (in impl DeepView for Prop) open spec fn deep_view(&self) -> Self::V
-2. Iin impl Clone for Prop) fn clone(&self) -> (res: Self)
+2. (in impl Clone for Prop) fn clone(&self) -> (res: Self)
 3. (in impl PartialEq for Prop) fn eq(&self, other: &Self) -> (res: bool)
 4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
 5. pub open spec fn spec_concrete(self) -> bool
@@ -82,6 +82,31 @@ Functions that can be used on Prop types:
 14. pub fn subst(&self, s: &Subst) -> (res: Prop)
 
 ## Rule
+
+Rules are the equivalent to rules in Datalog. A Rule in the kernel with no body is equivalent to a fact in Datalog. In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) :- edge(a, b) is a Rule that is also a rule in Datalog. In this datalog line of code: edge("x", "y"). ---- edge("x", "y"). is a Rule that is a fact in Datalog because it only has a head and no body.
+
+Rule types are structs with the following members:
+1.  pub head: Prop
+2. pub body: Vec<Prop>
+3. pub id: u64
+
+Its spec versions for SpecRule are:
+1. pub head: SpecProp
+2. pub body: Seq<SpecProp>
+3. pub id: u64
+
+Functions that can be used on Rule types:
+1. (in impl DeepView for Rule) open spec fn deep_view(&self) -> Self::V
+2. (in impl Clone for Rule) fn clone(&self) -> (res: Self)
+3. (in impl PartialEq for Rule) fn eq(&self, other: &Self) -> (res: bool)
+4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
+5. pub open spec fn spec_concrete(self) -> bool
+6. pub open spec fn spec_wf(self) -> bool
+7. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecRule)
+8. pub fn subst(&self, s: &Subst) -> (res: Rule)
+9. pub fn complete_subst(&self, s: &Subst) -> (res: bool)
+10. pub fn concrete(&self) -> (res: bool)
+11. pub fn wf(&self) -> (res: bool)
 
 ## Ruleset
 
