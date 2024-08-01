@@ -8,7 +8,30 @@ The purpose of this verified kernel is to encode a RuleSet corresponding to a se
 
 ## Const 
 
+Const types have 3 variants:
+1. Atom(String)
+2. Nat(u64)
+3. Str(String)
+
+Its spec versions for SpecConst are:
+1. Atom(Seq<char>)
+2. Nat(u64)
+3. Str(Seq<char>)
+
+Const is the base type 
+
+## Subst
+
+Type Subst is a hashmap of Consts:
+type Subst = TmpStringHashMap<Const>;
+
+Its spec verions is SpecSubst which is a Map:
+type SpecSubst = Map<Seq<char>, SpecConst>;
+
+
 ## Term
+
+
 
 ## Prop
 
