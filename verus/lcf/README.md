@@ -30,7 +30,9 @@
 
 ## Another verus specific feature used was deep_view which allowed us to access the deep_view of exec functions and call spec functions in exec mode when writing invariants, preconditions, poscondtions, and asserts. Additional ensures statements were used to help the verifier understand that the deep_view call could be before or after accessing fields of dat types and also reasoning that the exec versions and spec versions functioned the same way. here's an example:
 
-## pub fn wf(self) -> (res: bool)
+    exec version:
+
+    pub fn wf(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_wf(),
     {
@@ -49,7 +51,15 @@
         }
         flag
     }
-    
+
+    spec version:
+
+    pub open spec fn spec_wf(self) -> bool {
+        forall|i: int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
+    }
+
+
+
 
 ## TmpStringHashMap
 
