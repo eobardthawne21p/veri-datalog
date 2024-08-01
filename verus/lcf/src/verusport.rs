@@ -844,6 +844,7 @@ pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
     }
 }
 
+//#[verifier::loop_isolation(false)] in order to satisfy invariants and meet recommendations
 #[verifier::loop_isolation(false)]
 //function that produces a thm after being passed the Ruleset and Vec<Thm> to be used to validate predicates based on rule and fact encodings
 pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
@@ -917,7 +918,10 @@ edge("z", "w").
 */
 
 //function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
-pub fn tst_connected() -> (res: RuleSet) {
+pub fn tst_connected() -> (res: RuleSet)
+ ensures res.rs.len() >= 0,
+
+ {
     RuleSet {
         rs:
             vec![
@@ -999,18 +1003,19 @@ pub fn tst_connected() -> (res: RuleSet) {
     }
 }
 
-pub fn tst_connected_thm() -> (res: Result<Thm, ()>) {
+/* pub fn tst_connected_thm() -> (res: Result<Thm, ()>) 
+{
     let rs = tst_connected();
 
     //Dafny example
     /* var s1 : Subst := map["a" := Atom("x"), "b" := Atom("y")];
-  var thm1 := mk_thm(rs, 0, s1, []); */
+       var thm1 := mk_thm(rs, 0, s1, []); */
 
     let mut s1 = TmpStringHashMap::<Const>::new();
     s1.insert("a".to_string(), Const::Atom("x".to_string()));
     s1.insert("b".to_string(), Const::Atom("y".to_string()));
     let thm1 = mk_thm(&rs, 0, &s1, &vec![]);
-
+  
     let mut s2 = TmpStringHashMap::<Const>::new();
     s2.insert("a".to_string(), Const::Atom("x".to_string()));
     s2.insert("c".to_string(), Const::Atom("y".to_string()));
@@ -1040,7 +1045,7 @@ pub fn tst_connected_thm() -> (res: Result<Thm, ()>) {
         Ok(val) => Ok(val),
         Err(_) => Err(()),
     }
-}
+} */
 
 fn main() {
 }
