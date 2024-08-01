@@ -12,7 +12,7 @@ pub enum Const {
 }
 
 impl PartialEq for Const {
-    //Function allows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //allows for Const types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     //Must call const_eq for Atoms and Strs
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
@@ -30,7 +30,7 @@ impl PartialEq for Const {
 }
 
 impl Const {
-    // function uses eq from impl Partial Eq to prove equality between items
+    // uses eq from impl Partial Eq to prove equality between items
     pub fn const_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -45,8 +45,8 @@ impl Const {
 }
 
 impl Clone for Const {
-    //clone function for Const types explicitly copies and instantiates the original value so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to
+    //explicitly copies and instantiates the original value so that it fixes borrowing errors.
+    //it is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -68,7 +68,6 @@ pub enum SpecConst {
 impl DeepView for Const {
     type V = SpecConst;
 
-    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Const::Atom(s) => SpecConst::Atom(s.view()),
@@ -78,13 +77,13 @@ impl DeepView for Const {
     }
 }
 
-// Utilizing TmpStringHashMap from string_hash_map.rs; see relevant functions if needed - not yet in vstd
+// Utilizing TmpStringHashMap from string_hash_map.rs
 type Subst = TmpStringHashMap<Const>;
 
 // Using a map with spec-level types to reason about Subst
 type SpecSubst = Map<Seq<char>, SpecConst>;
 
-//spec function checks if all elements of one specSubst type are present in the other
+//checks if all elements of one specSubst type are present in the other
 // specific triggers were chosen because auto triggers could not be determined by the verifier
 spec fn compatible_subst(s: SpecSubst, t: SpecSubst) -> bool {
     forall|v: String| (#[trigger] s[v@]) == (#[trigger] t[v@])
@@ -103,7 +102,6 @@ pub enum SpecTerm {
 impl DeepView for Term {
     type V = SpecTerm;
 
-    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Term::Const(c) => SpecTerm::Const(c.deep_view()),
@@ -113,8 +111,8 @@ impl DeepView for Term {
 }
 
 impl Clone for Term {
-    //clone function for Term types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to
+    //explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //it is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self.deep_view() == res.deep_view(),
@@ -127,7 +125,7 @@ impl Clone for Term {
 }
 
 impl PartialEq for Term {
-    //function allows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //allows for Term types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -141,7 +139,7 @@ impl PartialEq for Term {
 }
 
 impl SpecTerm {
-    //spec function returns true if the map contains the key when it a Var variant, or if it is Const variant
+    //returns true if the map contains the key when it a Var variant, or if it is Const variant
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecTerm::Var(v) => s.contains_key(v),
@@ -149,12 +147,12 @@ impl SpecTerm {
         }
     }
 
-    // spec function checks if SpecTerm is a base type
+    //checks if SpecTerm is a base type
     pub open spec fn spec_concrete(self) -> bool {
         self is Const
     }
 
-    //spec function reasons about substitution from Var variants to Const or does nothing if it is a Const variant
+    //reasons about substitution from Var variants to Const or does nothing if it is a Const variant
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecTerm)
         recommends
             self.spec_complete_subst(s),
@@ -170,7 +168,7 @@ impl SpecTerm {
 }
 
 impl Term {
-    // function proves equality for Term types
+    //proves equality for Term types
     pub fn term_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -182,7 +180,7 @@ impl Term {
         }
     }
 
-    // function checks whether Term items are either Const or are Vars with a key in the Subst TmpStringHashMap
+    //checks whether Term items are either Const or are Vars with a key in the Subst TmpStringHashMap
     pub fn complete_subst(self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -193,7 +191,7 @@ impl Term {
         }
     }
 
-    // function checks if term variant is a base type
+    //checks if term variant is a base type
     pub fn concrete(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -204,7 +202,7 @@ impl Term {
         }
     }
 
-    // this functions performs a substitution to achieve a Const variant of Term
+    //performs a substitution to achieve a Const variant of Term
     pub fn subst(self, s: &Subst) -> (res: Term)
         requires
             self.deep_view().spec_complete_subst(s.deep_view()),
@@ -224,7 +222,7 @@ impl Term {
 
 //#[verifier::external_body] needed because the verifier does not support the equality relation we are trying to leverage
 #[verifier::external_body]
-//function checks whether 2 Vec<Term>s are equal or not
+//checks whether 2 Vec<Term>s are equal or not
 pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
     ensures
         res <==> a.deep_view() == b.deep_view(),
@@ -245,7 +243,6 @@ pub enum SpecProp {
 impl DeepView for Prop {
     type V = SpecProp;
 
-    // deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         match self {
             Prop::App(s, v) => SpecProp::App(s.view(), v.deep_view()),
@@ -257,8 +254,8 @@ impl DeepView for Prop {
 impl Clone for Prop {
     //#[verifier::external_body] needed to satisfy postcondition on line 253.
     #[verifier::external_body]
-    //clone function for Prop types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to
+    //explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //it is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -271,7 +268,7 @@ impl Clone for Prop {
 }
 
 impl PartialEq for Prop {
-    // function aids verus verifier in reasoning about equality; not fully sufficient - must call prop_eq for certain types
+    //aids verus verifier in reasoning about equality; not fully sufficient - must call prop_eq for certain types
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -285,7 +282,7 @@ impl PartialEq for Prop {
 }
 
 impl SpecProp {
-    //spec function checks if Prop variants contain key to map; calls spec_complete_subst from Term
+    //checks if Prop variants contain key to map; calls spec_complete_subst from Term
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -297,7 +294,7 @@ impl SpecProp {
         }
     }
 
-    // spec function checks if Prop variants are of base types
+    //checks if Prop variants are of base types
     pub open spec fn spec_concrete(self) -> bool {
         match self {
             SpecProp::App(head, args) => forall|i: int|
@@ -309,14 +306,14 @@ impl SpecProp {
         }
     }
 
-    //spec function if SpecProp is an App variant
+    //checks if SpecProp is an App variant
     pub open spec fn spec_symbolic(self) -> bool {
         self is App
     }
 
-    //spec function checks whether valid SpecProp types are concrete and are equal
+    //checks whether valid SpecProp types are concrete and are equal
     pub open spec fn spec_valid(self) -> bool {
-        if self.spec_symbolic() == true || self.spec_concrete() == false {
+        if self.spec_symbolic() || !(self.spec_concrete()) {
             false
         } else {
             match self {
@@ -331,14 +328,13 @@ impl SpecProp {
         }
     }
 
-    // spec function reasons about substitution of SpecProp variants to SpecTerms
+    //reasons about substitution of SpecProp variants to SpecTerms
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
         recommends
             self.spec_complete_subst(s),
     {
         match self {
             SpecProp::App(h, args) => {
-                //map_values calls spec_subst on all SpecTerm items in args and stores in new sequence
                 let new_sequence = args.map_values(|p: SpecTerm| p.spec_subst(s));
                 SpecProp::App(h, new_sequence)
             },
@@ -348,7 +344,7 @@ impl SpecProp {
 }
 
 impl Prop {
-    //function proves equality for Prop types. uses term_eq and terms_eq
+    //proves equality for Prop types. uses term_eq and terms_eq
     pub fn prop_eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -360,7 +356,7 @@ impl Prop {
         }
     }
 
-    // function checks whether Prop variants are concrete and elements are equal to each other
+    //checks whether Prop variants are concrete and elements are equal to each other
     pub fn valid(self) -> (res: bool)
         requires
             !self.deep_view().spec_symbolic(),
@@ -379,7 +375,7 @@ impl Prop {
         }
     }
 
-    //function checks whether Prop is an App variant
+    //checks whether Prop is an App variant
     pub fn symbolic(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_symbolic(),
@@ -390,7 +386,7 @@ impl Prop {
         }
     }
 
-    //function checks whether Prop variants are base types
+    //checks whether Prop variants are base types
     pub fn concrete(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -422,7 +418,7 @@ impl Prop {
         }
     }
 
-    //function checks if Prop variants contain key in Susbt TmpStringHashMap
+    //checks if Prop variants contain key in Susbt TmpStringHashMap
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -519,14 +515,13 @@ pub struct SpecRule {
 impl DeepView for Rule {
     type V = SpecRule;
 
-    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecRule { head: self.head.deep_view(), body: self.body.deep_view(), id: self.id }
     }
 }
 
 impl PartialEq for Rule {
-    // function allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> (res: bool)
         ensures
             res <==> self.deep_view() == other.deep_view(),
@@ -538,8 +533,8 @@ impl PartialEq for Rule {
 impl Clone for Rule {
     //#[verifier::external_body] needed to satisfy postcondition on line 513
     #[verifier::external_body]
-    //clone function for Rule types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to
+    //explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //it is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -549,7 +544,7 @@ impl Clone for Rule {
 }
 
 impl SpecRule {
-    //spec function checks all items in SpecRule for being complete substitutions in SpecSubst
+    //checks all items in SpecRule for being complete substitutions in SpecSubst
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         &&& self.head.spec_complete_subst(
             s,
@@ -558,7 +553,7 @@ impl SpecRule {
         &&& forall|i: int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_complete_subst(s)
     }
 
-    //spec function checks if SpecRule contains items that are all base types
+    //checks if SpecRule contains items that are all base types
     pub open spec fn spec_concrete(self) -> bool {
         self.head.spec_concrete() && forall|i: int|
             #![auto]
@@ -567,12 +562,12 @@ impl SpecRule {
             0 <= i < self.body.len() ==> self.body[i].spec_concrete()
     }
 
-    //spec function checks if SpecRule's SpecProp item is of type App before being entered into SpecRuleset
+    //checks if SpecRule's SpecProp item is of type App before being entered into SpecRuleset
     pub open spec fn spec_wf(self) -> bool {
         self.head.spec_symbolic()
     }
 
-    //spec function reasons about a substitution for SpecRule to SpecProp
+    //reasons about a substitution for SpecRule to SpecProp
     pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecRule)
         recommends
             self.spec_complete_subst(s),
@@ -584,7 +579,7 @@ impl SpecRule {
 }
 
 impl Rule {
-    //function performs a substition from type Rule to Prop
+    //performs a substition from type Rule to Prop
     pub fn subst(&self, s: &Subst) -> (res: Rule)
         requires
             self.deep_view().spec_complete_subst(s.deep_view()),
@@ -631,7 +626,7 @@ impl Rule {
         result
     }
 
-    //function checks if all items in Rule are complete substitutions
+    //checks if all items in Rule are complete substitutions
     pub fn complete_subst(&self, s: &Subst) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
@@ -658,7 +653,7 @@ impl Rule {
         }
     }
 
-    //function checks whether Rule type contains only base types
+    //checks whether Rule type contains only base types
     pub fn concrete(&self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_concrete(),
@@ -685,7 +680,7 @@ impl Rule {
         }
     }
 
-    //function checks if Rule contains App variants before adding it to Ruleset
+    //checks if Rule contains App variants before adding it to Ruleset
     pub fn wf(&self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_wf(),
@@ -705,21 +700,20 @@ pub struct SpecRuleSet {
 impl DeepView for RuleSet {
     type V = SpecRuleSet;
 
-    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecRuleSet { rs: self.rs.deep_view() }
     }
 }
 
 impl SpecRuleSet {
-    //spec function checks if all items in SpecRuleset are well-formed
+    //checks if all items in SpecRuleset are well-formed
     pub open spec fn spec_wf(self) -> bool {
         forall|i: int| #![auto] 0 <= i < self.rs.len() ==> self.rs[i].spec_wf()
     }
 }
 
 impl RuleSet {
-    //function checks whether all items in RuleSet are well-formed
+    //checks whether all items in RuleSet are well-formed
     pub fn wf(self) -> (res: bool)
         ensures
             res <==> self.deep_view().spec_wf(),
@@ -757,9 +751,9 @@ impl DeepView for Proof {
     closed spec fn deep_view(&self) -> Self::V;
 }
 
-//#[verifier::external_body] needed due to postocondition failing on lines 716 and 719
+//#[verifier::external_body] needed due to postocondition failing
 #[verifier::external_body]
-//function allows us to reason about deep_view
+//allows us to reason about deep_view
 pub proof fn axiom_proof_deep_view(pf: &Proof)
     ensures
 //these matches statements ensure that exec and spec values are the same
@@ -775,7 +769,7 @@ pub proof fn axiom_proof_deep_view(pf: &Proof)
 }
 
 impl PartialEq for Proof {
-    // function allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
+    //allows for Rule types to be evaluated for equality and aid Verus verifier; not fully sufficient.
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Proof::Pstep(a, b, c), Proof::Pstep(d, e, f)) => a == d && b == e && c == f,
@@ -787,10 +781,10 @@ impl PartialEq for Proof {
 }
 
 impl Clone for Proof {
-    //#[verifier::external_body] needed because the verifier thinks it found a cycle on line 723 with v.clone()
+    //#[verifier::external_body] needed because the verifier thinks it found a cycle
     #[verifier::external_body]
-    //clone function for Proof types explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
-    //It is needed when you want to borrow a value that will produce an error when you try to
+    //explicitly copies and instantiates the original value into a new item so that it fixes borrowing errors.
+    //it is needed when you want to borrow a value that will produce an error when you try to
     fn clone(&self) -> (res: Self)
         ensures
             self == res,
@@ -803,7 +797,7 @@ impl Clone for Proof {
 }
 
 impl SpecProof {
-    //spec function checking if the Proof is valid by applying specs on its SpecRuleSet items
+    //checking if the Proof is valid by applying specs on its SpecRuleSet items
     pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
         decreases self,
     {
@@ -821,7 +815,7 @@ impl SpecProof {
         }
     }
 
-    //spec function that reasons about the substition of the Prop element in Proof that is the Rule in Pstep and is itself in QQED
+    //reasons about the substition of the Prop element in Proof that is the Rule in Pstep and is itself in QQED
     pub open spec fn spec_head(self) -> SpecProp
         recommends
             self matches SpecProof::Pstep(rule, s, branches) ==> rule.spec_complete_subst(s),
@@ -834,7 +828,7 @@ impl SpecProof {
 }
 
 impl Proof {
-    //function that performs a substition of the Prop element in Proof that is the Rule in Pstep and is itself in QED (just clones itself in QED)
+    //performs a substition of the Prop element in Proof that is the Rule in Pstep and is itself in QED (just clones itself in QED)
     pub fn head(&self) -> (res: Prop)
         requires
             self matches Proof::Pstep(rule, s, branches) ==> rule.deep_view().spec_complete_subst(
@@ -866,20 +860,19 @@ pub struct SpecThm {
 impl DeepView for Thm {
     type V = SpecThm;
 
-    // function deep_view allows for reasoning about spec-level data structures and types while in exec mode
     open spec fn deep_view(&self) -> Self::V {
         SpecThm { val: self.val.deep_view(), p: self.p.deep_view() }
     }
 }
 
 impl SpecThm {
-    //spec function that checks whether the SpecRuleSet is valid and if p substituted to head is equal to the val argument of the SpecThm
+    //checks whether the SpecRuleSet is valid and if p substituted to head is equal to the val argument of the SpecThm
     pub open spec fn spec_wf(self, rule_set: SpecRuleSet) -> bool {
         self.p.spec_valid(rule_set) && self.p.spec_head() == self.val
     }
 }
 
-//function used in the thm derivation process to create terminal points on branches of proof trees
+//used in the thm derivation process to create terminal points on branches of proof trees
 pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
     ensures
         p.deep_view().spec_concrete() && !p.deep_view().spec_symbolic()
@@ -895,7 +888,7 @@ pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
 
 //#[verifier::loop_isolation(false)] in order to satisfy invariants and meet recommendations
 #[verifier::loop_isolation(false)]
-//function that produces a thm after being passed the Ruleset and Vec<Thm> to be used to validate predicates based on rule and fact encodings
+//produces a thm after being passed the Ruleset and Vec<Thm> to be used to validate predicates based on rule and fact encodings
 pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
     requires
         k < rs.rs.len(),
@@ -940,35 +933,34 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
     }
     //if all properties were satisfied
 
-    if flag == true {
-        let mut pfs: Vec<Proof> = Vec::new();
-        for i in 0..args.len()
-            invariant
-                pfs.len() == i,
-                0 <= i <= args.len(),
-                forall|j: int|
-                    #![auto]
-                //invariant forall checks if all indices of pfs are valid
-
-                    0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
-                forall|j: int|
-                    #![auto]
-                //invariant forall checks if all indices of pfs.head() == r_subst.body[j]
-
-                    0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
-        {
-            pfs.push(args[i].p.clone());
-            proof { axiom_proof_deep_view(&args[i as int].p) }
-            ;
-        }
-        let p = Proof::Pstep(r.clone(), s.clone(), pfs);
-        let thm = Thm { val: r_subst.head, p: p };
-        proof { axiom_proof_deep_view(&p) }
-        ;
-        Ok(thm)
-    } else {
-        Err(())
+    if !flag {
+        return Err(());
     }
+    let mut pfs: Vec<Proof> = Vec::new();
+    for i in 0..args.len()
+        invariant
+            pfs.len() == i,
+            0 <= i <= args.len(),
+            forall|j: int|
+                #![auto]
+            //invariant forall checks if all indices of pfs are valid
+
+                0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
+            forall|j: int|
+                #![auto]
+            //invariant forall checks if all indices of pfs.head() == r_subst.body[j]
+
+                0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
+    {
+        pfs.push(args[i].p.clone());
+        proof { axiom_proof_deep_view(&args[i as int].p) }
+        ;
+    }
+    let p = Proof::Pstep(r.clone(), s.clone(), pfs);
+    let thm = Thm { val: r_subst.head, p: p };
+    proof { axiom_proof_deep_view(&p) }
+    ;
+    Ok(thm)
 }
 
 //Edge-connectivity example using the following Datalog program:
@@ -983,7 +975,7 @@ edge("z", "w").
 The query is ?- connected("x","w").
 */
 
-//function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
+//constructs a RuleSet from user-defined rules and facts (rules without bodies)
 pub fn tst_connected() -> (res: RuleSet)
     ensures
         res.rs.len() == 6,
@@ -1069,8 +1061,8 @@ pub fn tst_connected() -> (res: RuleSet)
     }
 }
 
-pub fn tst_connected_thm() -> (res: Result<Thm, ()>)
-{
+//makes thms for steps in proof tree and checks the final one
+pub fn tst_connected_thm() -> (res: Result<Thm, ()>) {
     let rs = tst_connected();
 
     //Dafny example
@@ -1111,9 +1103,6 @@ pub fn tst_connected_thm() -> (res: Result<Thm, ()>)
         Ok(val) => Ok(val),
         Err(_) => Err(()),
     }
-} 
-
-fn main() {
 }
 
 } // verus!
