@@ -710,6 +710,7 @@ impl RuleSet {
         ensures
             res <==> self.deep_view().spec_wf(),
     {
+      //using flag to check if all elements in the body are well formed
         let mut flag = true;
         assert(forall|k: int|
             0 <= k < self.rs.len() ==> (#[trigger] self.rs[k].deep_view())
@@ -717,6 +718,7 @@ impl RuleSet {
         for i in 0..self.rs.len()
             invariant
                 0 <= i <= self.rs.len(),
+                //invariant forall checks all body elements if they are well formed using deep_view
                 flag <==> forall|j: int| #![auto] 0 <= j < i ==> self.rs[j].deep_view().spec_wf(),
         {
             flag = self.rs[i].wf() && flag
@@ -746,6 +748,7 @@ impl DeepView for Proof {
 //function allows us to reason about deep_view
 pub proof fn axiom_proof_deep_view(pf: &Proof)
     ensures
+    //these matches statements ensure that exec and spec values are the same
         pf matches Proof::Pstep(r, s, v) ==> (#[trigger] pf.deep_view()) matches SpecProof::Pstep(
             spec_r,
             spec_s,
@@ -794,6 +797,7 @@ impl SpecProof {
             SpecProof::Pstep(rule, s, branches) => rule_set.rs.contains(rule)
                 && rule.spec_complete_subst(s) && rule.body.len() == branches.len() && {
                 let rule1 = rule.spec_subst(s);
+                //forall statement goes through all indices of the branches and subsituted rule bodies to check for equality
                 forall|i: int|
                     #![auto]
                     0 <= i < rule1.body.len() ==> branches[i].spec_valid(rule_set) && rule1.body[i]
@@ -824,6 +828,7 @@ impl Proof {
         ensures
             res.deep_view() <==> self.deep_view().spec_head(),
     {
+      //lemma shows that exec and spec variants are equal
         proof { axiom_proof_deep_view(self) }
         ;
         match self {
@@ -879,8 +884,10 @@ pub fn mk_leaf(p: &Prop) -> (res: Result<Thm, ()>)
 pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Result<Thm, ()>)
     requires
         k < rs.rs.len(),
+        //forall statement makes sure that all theorems are well formed
         forall|j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
     ensures
+    //ensures block specifies conditions that must be met in order for the thm to be valid at termination
         ((rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && args.len()
             == rs.rs[k as int].body.len() && (forall|j: int|
             #![auto]
@@ -891,10 +898,13 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             == rs.rs[k as int].deep_view().spec_subst(s.deep_view()).head,
 {
     let r = rs.rs[k].clone();
+    //assertion states that using deep_view of the original ruleset and accesing elements results in the same as line 900
     assert(rs.deep_view().rs[k as int] == r.deep_view());
+  
     if args.len() != r.body.len() || !r.complete_subst(&s) {
         return Err(());
     }
+    //flag is used to check conditions for successful thm production
     let mut flag = true;
     let r_subst = r.subst(&s);
     for i in 0..args.len()
@@ -904,11 +914,13 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             r_subst.deep_view() == r.deep_view().spec_subst(s.deep_view()),
             flag <==> forall|j: int|
                 #![auto]
+                //invariant forall shows that different placements od deep_view have same result
                 0 <= j < i ==> args[j as int].deep_view().val == r_subst.deep_view().body[j as int],
     {
         flag = (Prop::prop_eq(&r_subst.body[i], &args[i].val) && flag);
         assert(flag ==> args[i as int].deep_view().val == r_subst.deep_view().body[i as int]);
     }
+    //if all properties were satisfied
     if flag == true {
         let mut pfs: Vec<Proof> = Vec::new();
         for i in 0..args.len()
