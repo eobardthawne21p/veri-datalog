@@ -88,9 +88,11 @@ edge("y", "z").      " there exists an edge between "y" and "z" "
 edge("z", "w").      " there exists an edge between "z" and "w" "
 
 
-The query is: ?- connected("x","w").
+The query is: ?- connected("x", "w").
 
 The resulting veruscode for this datalog program is in fn tst_connected
+
+## tst_connected
 
 pub fn tst_connected() -> (res: RuleSet)
  ensures res.rs.len() >= 0,
@@ -193,6 +195,10 @@ pub fn tst_connected() -> (res: RuleSet)
         ],
     }
 }
+
+## tst_connected_thm
+
+
 
 
 
