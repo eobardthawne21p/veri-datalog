@@ -185,7 +185,61 @@ The resulting veruscode for this datalog program is in fn tst_connected
 
 ## tst_connected_thm
 
+This function will take the ruleset that we just created, an index into the rule it will try to use, a Subst type which corresponds to what we will insert at each node in the proof tree. In theory, if we were given proof tree from the trace reconstruction algorithm, we could just run Ok on it, but for now we need to use mk_thm to generate each step.
 
+```
+
+pub fn tst_connected_thm() -> (res: Result<Thm, ()>) 
+{
+    // calls tst_connected to generate RuleSet
+    let rs = tst_connected();
+
+    // Corresponds to first step in proof tree where a is substituted for x and b is substituted for y
+    let mut s1 = TmpStringHashMap::<Const>::new();
+    s1.insert("a".to_string(), Const::Atom("x".to_string()));
+    s1.insert("b".to_string(), Const::Atom("y".to_string()));
+    let thm1 = mk_thm(&rs, 0, &s1, &vec![]);
+  
+    // Corresponds to first step in proof tree where a is substituted for x and c is substituted for y
+    let mut s2 = TmpStringHashMap::<Const>::new();
+    s2.insert("a".to_string(), Const::Atom("x".to_string()));
+    s2.insert("c".to_string(), Const::Atom("y".to_string()));
+    let thm2 = mk_thm(&rs, 1, &s2, &vec![]);
+
+    // Corresponds to first step in proof tree where a is substituted for y and b is substituted for z
+    let mut s3 = TmpStringHashMap::<Const>::new();
+    s3.insert("a".to_string(), Const::Atom("y".to_string()));
+    s3.insert("b".to_string(), Const::Atom("z".to_string()));
+    let thm3 = mk_thm(&rs, 0, &s3, &vec![]);
+
+    // Corresponds to first step in proof tree where a is substituted for x and c is substituted for w
+    let mut s4 = TmpStringHashMap::<Const>::new();
+    s4.insert("a".to_string(), Const::Atom("x".to_string()));
+    s4.insert("c".to_string(), Const::Atom("z".to_string()));
+    let thm4 = mk_thm(&rs, 1, &s4, &vec![]);
+
+    // Corresponds to first step in proof tree where a is subsituted for z and b is subsituted for w
+    let mut s5 = TmpStringHashMap::<Const>::new();
+    s5.insert("a".to_string(), Const::Atom("z".to_string()));
+    s5.insert("b".to_string(), Const::Atom("w".to_string()));
+    let thm5 = mk_thm(&rs, 0, &s5, &vec![]);
+
+    // Corresponds to first step in proof tree where a is subsituted for x and b is subsituted for w
+    let mut s6 = TmpStringHashMap::<Const>::new();
+    s6.insert("a".to_string(), Const::Atom("x".to_string()));
+    s6.insert("c".to_string(), Const::Atom("w".to_string()));
+    let thm6 = mk_thm(&rs, 1, &s6, &vec![]);
+
+    //since we found that ("x", "w") are connected, it should return Ok(val)
+    match thm6 {
+        Ok(val) => Ok(val),
+        Err(_) => Err(()),
+    } 
+}
+
+```
+
+If your proof tree is constructed correctly according to the ruleset that you provide, the verifier will verify the tests functions. Incorrect input will result in Err
 
 
 
