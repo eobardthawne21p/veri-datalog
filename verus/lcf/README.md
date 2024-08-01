@@ -8,7 +8,7 @@ The purpose of this verified kernel is to encode a RuleSet corresponding to a se
 
 ## Const 
 
-Const types have 3 variants:
+Const types are enums that have 3 variants:
 1. Atom(String)
 2. Nat(u64)
 3. Str(String)
@@ -19,7 +19,7 @@ Its spec versions for SpecConst are:
 3. Str(Seq<char>)
 
 Const is the base type 
-The only function that can be used on the enum is: open spec fn deep_view(&self) -> Self::V
+The only function that can be used on the enum is: (in impl DeepView for Const) open spec fn deep_view(&self) -> Self::V
 
 ## Subst
 
@@ -32,7 +32,7 @@ type SpecSubst = Map<Seq<char>, SpecConst>;
 
 ## Term
 
-Term types have 2 variants:
+Term types are enums that have 2 variants:
 1. Const(Const)
 2. Var(String)
 
@@ -41,9 +41,9 @@ Its spec versions for SpecTerm are:
 2. Var(Seq<char>)
 
 Functions that can be used on Term types:
-1. open spec fn deep_view(&self) -> Self::V
-2. fn clone(&self) -> (res: Self)
-3. (in Impl ParitalEq for Term) fn eq(&self, other: &Self) -> (res: bool)
+1. (in impl DeepView for Term) open spec fn deep_view(&self) -> Self::V
+2. Iin impl Clone for Term) fn clone(&self) -> (res: Self)
+3. (in impl PartialEq for Term) fn eq(&self, other: &Self) -> (res: bool)
 4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
 5. pub open spec fn spec_concrete(self) -> bool
 6. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecTerm)
@@ -53,6 +53,33 @@ Functions that can be used on Term types:
 10. pub fn subst(self, s: &Subst) -> (res: Term)
 
 ## Prop
+
+Props are the heads of rules that are used in rulesets for mk_thm.
+In this datalog line of code: connected(a, b) :- edge(a, b). , connected(a, b) is the Prop
+
+Prop types are enums that have 2 variants:
+1. App(String, Vec<Term>)
+2. Eq(Term, Term)
+
+Its spec versionsfor SpecProp are:
+1. App(Seq<char>, Seq<SpecTerm>)
+2. Eq(SpecTerm, SpecTerm)
+
+Functions that can be used on Prop types:
+1. (in impl DeepView for Prop) open spec fn deep_view(&self) -> Self::V
+2. Iin impl Clone for Prop) fn clone(&self) -> (res: Self)
+3. (in impl PartialEq for Prop) fn eq(&self, other: &Self) -> (res: bool)
+4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
+5. pub open spec fn spec_concrete(self) -> bool
+6. pub open spec fn spec_symbolic(self) -> bool
+7. pub open spec fn spec_valid(self) -> bool
+8. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
+9. pub fn prop_eq(&self, other: &Self) -> (res: bool)
+10. pub fn valid(self) -> (res: bool)
+11. pub fn symbolic(self) -> (res: bool)
+12. pub fn concrete(self) -> (res: bool)
+13. pub fn complete_subst(&self, s: &Subst) -> (res: bool)
+14. pub fn subst(&self, s: &Subst) -> (res: Prop)
 
 ## Rule
 
