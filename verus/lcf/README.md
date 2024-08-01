@@ -26,9 +26,9 @@
 
 ## Verus specific features in implementation of kernel                  
 
-## One Verus specific feature in the implementation of the kernel is the separation between spec and exec code. Exec code is executable code such as functions susbt, mk_lf, and mk_thm that are commonly used in the kernel and are compileed. Spec code is code that reasons about the exec code without compiling and returns errors to the verifier if the code is not correct. Another is the use of loop invariants, triggers, assertions, and lemmas that were used to aid the verifier in reasoning about preconditions, postconditions, and recommendations. The ones left are essential for kernel verification, so do not remove them. They have been thoroughly commented and described in the code body.
+One Verus specific feature in the implementation of the kernel is the separation between spec and exec code. Exec code is executable code such as functions susbt, mk_lf, and mk_thm that are commonly used in the kernel and are compileed. Spec code is code that reasons about the exec code without compiling and returns errors to the verifier if the code is not correct. Another is the use of loop invariants, triggers, assertions, and lemmas that were used to aid the verifier in reasoning about preconditions, postconditions, and recommendations. The ones left are essential for kernel verification, so do not remove them. They have been thoroughly commented and described in the code body.
 
-## Another verus specific feature used was deep_view which allowed us to access the deep_view of exec functions and call spec functions in exec mode when writing invariants, preconditions, poscondtions, and asserts. Additional ensures statements were used to help the verifier understand that the deep_view call could be before or after accessing fields of dat types and also reasoning that the exec versions and spec versions functioned the same way. here's an example:
+Another verus specific feature used was deep_view which allowed us to access the deep_view of exec functions and call spec functions in exec mode when writing invariants, preconditions, poscondtions, and asserts. Additional ensures statements were used to help the verifier understand that the deep_view call could be before or after accessing fields of dat types and also reasoning that the exec versions and spec versions functioned the same way. here's an example:
 
     exec version:
 
@@ -61,9 +61,11 @@
 
 
 
-## TmpStringHashMap
+TmpStringHashMap was another Verus specific feature in the implementation of the kernel. Developed by Jay Lorch, the StringHashMap data structure was introduced to the vstd library for Verus. Our team utilized addtional functions such as deep_view and partial_eq for StringHashMap, so the attached file in the repository is the version that incldues that functions that are used.
 
 ## Missing features
+
+
 
 ## Toy Example of kernel working
 
