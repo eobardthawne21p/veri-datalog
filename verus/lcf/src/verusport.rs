@@ -629,13 +629,14 @@ impl Rule {
             assert(forall|k: int|
                 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                     == self.deep_view().body[k]);
-            //using flag to check all indices of body 
+            //using flag to check if all elements in the body are complete substitutions
             let mut flag = true;
             for i in 0..self.body.len()
                 invariant
                     0 <= i <= self.body.len(),
                     flag <==> forall|j: int|
                         #![auto]
+                        //invariant forall checks all body elements if they are complere susbtitutions using deep_view
                         0 <= j < i ==> self.body[j].deep_view().spec_complete_subst(s.deep_view()),
             {
                 flag = self.body[i].clone().complete_subst(s) && flag
@@ -650,15 +651,18 @@ impl Rule {
             res <==> self.deep_view().spec_concrete(),
     {
         self.head.clone().concrete() && {
+          //assertion uses forall for body in rule to show that spec and exec versions are equal
             assert(forall|k: int|
                 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                     == self.deep_view().body[k]);
+            //using flag to check if all elements in the body are concrete
             let mut flag = true;
             for i in 0..self.body.len()
                 invariant
                     0 <= i <= self.body.len(),
                     flag <==> forall|j: int|
                         #![auto]
+                        //invariant forall checks if all indices in body are concrete
                         0 <= j < i ==> self.body[j].deep_view().spec_concrete(),
             {
                 flag = self.body[i].clone().concrete() && flag
@@ -1028,7 +1032,7 @@ pub fn tst_connected() -> (res: RuleSet)
     }
 }
 
-/* pub fn tst_connected_thm() -> (res: Result<Thm, ()>) 
+/*pub fn tst_connected_thm() -> (res: Result<Thm, ()>) 
 {
     let rs = tst_connected();
 
@@ -1069,7 +1073,7 @@ pub fn tst_connected() -> (res: RuleSet)
     match thm6 {
         Ok(val) => Ok(val),
         Err(_) => Err(()),
-    }
+    } 
 } */
 
 fn main() {
