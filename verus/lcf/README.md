@@ -19,6 +19,7 @@ Its spec versions for SpecConst are:
 3. Str(Seq<char>)
 
 Const is the base type 
+The only function that can be used on the enum is: open spec fn deep_view(&self) -> Self::V
 
 ## Subst
 
@@ -31,7 +32,25 @@ type SpecSubst = Map<Seq<char>, SpecConst>;
 
 ## Term
 
+Term types have 2 variants:
+1. Const(Const)
+2. Var(String)
 
+Its spec versions for SpecTerm are:
+1. Const(SpecConst)
+2. Var(Seq<char>)
+
+Functions that can be used on Term types:
+1. open spec fn deep_view(&self) -> Self::V
+2. fn clone(&self) -> (res: Self)
+3. (in Impl ParitalEq for Term) fn eq(&self, other: &Self) -> (res: bool)
+4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
+5. pub open spec fn spec_concrete(self) -> bool
+6. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecTerm)
+7. pub fn term_eq(&self, other: &Self) -> (res: bool)
+8. pub fn complete_subst(self, s: &Subst) -> (res: bool)
+9. pub fn concrete(self) -> (res: bool)
+10. pub fn subst(self, s: &Subst) -> (res: Term)
 
 ## Prop
 
@@ -42,6 +61,12 @@ type SpecSubst = Map<Seq<char>, SpecConst>;
 ## Proof
 
 ## Thm
+
+## Notes on functionality of kernel
+
+## Additional Functions
+
+pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
 
 ## mk-leaf and mk_thm
 
