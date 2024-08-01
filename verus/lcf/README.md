@@ -8,158 +8,38 @@ The purpose of this verified kernel is to encode a RuleSet corresponding to a se
 
 ## Const 
 
-Const types are enums that have 3 variants:
-1. Atom(String)
-2. Nat(u64)
-3. Str(String)
-
-Its spec versions for SpecConst are:
-1. Atom(Seq<char>)
-2. Nat(u64)
-3. Str(Seq<char>)
-
-Const is the base type 
-The only function that can be used on the enum is: (in impl DeepView for Const) open spec fn deep_view(&self) -> Self::V
+Const is the base type. The current Kernel implementation only deals with integers and strings. Future work will include support for lists.
 
 ## Subst
 
-Type Subst is a hashmap of Consts:
-type Subst = TmpStringHashMap<Const>;
-
-Its spec verions is SpecSubst which is a Map:
-type SpecSubst = Map<Seq<char>, SpecConst>;
-
+Type Subst is a hashmap of Consts.
+Whenever the susbt function in used on any data type, high-order data types like Proof, Rule, etc. will call subst of the next-lower type in the hierarchy. Therefore, all items in Subst hashmaps are of type Const.
 
 ## Term
 
-Term types are enums that have 2 variants:
-1. Const(Const)
-2. Var(String)
-
-Its spec versions for SpecTerm are:
-1. Const(SpecConst)
-2. Var(Seq<char>)
-
-Functions that can be used on Term types:
-1. (in impl DeepView for Term) open spec fn deep_view(&self) -> Self::V
-2. (in impl Clone for Term) fn clone(&self) -> (res: Self)
-3. (in impl PartialEq for Term) fn eq(&self, other: &Self) -> (res: bool)
-4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
-5. pub open spec fn spec_concrete(self) -> bool
-6. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecTerm)
-7. pub fn term_eq(&self, other: &Self) -> (res: bool)
-8. pub fn complete_subst(self, s: &Subst) -> (res: bool)
-9. pub fn concrete(self) -> (res: bool)
-10. pub fn subst(self, s: &Subst) -> (res: Term)
+Terms are used in the kernel to form Props which are the heads of Rules. When running mk_thm and performing substitutions, they will eventually be converted to Consts and the verifier will check for concreteness.
 
 ## Prop
 
 Props are the heads of rules that are used in rulesets for mk_thm.
-In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) is the Prop
-
-Prop types are enums that have 2 variants:
-1. App(String, Vec<Term>)
-2. Eq(Term, Term)
-
-Its spec versions for SpecProp are:
-1. App(Seq<char>, Seq<SpecTerm>)
-2. Eq(SpecTerm, SpecTerm)
-
-Functions that can be used on Prop types:
-1. (in impl DeepView for Prop) open spec fn deep_view(&self) -> Self::V
-2. (in impl Clone for Prop) fn clone(&self) -> (res: Self)
-3. (in impl PartialEq for Prop) fn eq(&self, other: &Self) -> (res: bool)
-4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
-5. pub open spec fn spec_concrete(self) -> bool
-6. pub open spec fn spec_symbolic(self) -> bool
-7. pub open spec fn spec_valid(self) -> bool
-8. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecProp)
-9. pub fn prop_eq(&self, other: &Self) -> (res: bool)
-10. pub fn valid(self) -> (res: bool)
-11. pub fn symbolic(self) -> (res: bool)
-12. pub fn concrete(self) -> (res: bool)
-13. pub fn complete_subst(&self, s: &Subst) -> (res: bool)
-14. pub fn subst(&self, s: &Subst) -> (res: Prop)
+In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) is the Prop. Props are used as QED or termination in proofs. 
 
 ## Rule
 
 Rules are the equivalent to rules in Datalog. A Rule in the kernel with no body is equivalent to a fact in Datalog. In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) :- edge(a, b) is a Rule that is also a rule in Datalog. In this datalog line of code: edge("x", "y"). ---- edge("x", "y"). is a Rule that is a fact in Datalog because it only has a head and no body.
 
-Rule types are structs that have 3 members:
-1.  pub head: Prop
-2. pub body: Vec<Prop>
-3. pub id: u64
-
-Its spec versions for SpecRule are:
-1. pub head: SpecProp
-2. pub body: Seq<SpecProp>
-3. pub id: u64
-
-Functions that can be used on Rule types:
-1. (in impl DeepView for Rule) open spec fn deep_view(&self) -> Self::V
-2. (in impl Clone for Rule) fn clone(&self) -> (res: Self)
-3. (in impl PartialEq for Rule) fn eq(&self, other: &Self) -> (res: bool)
-4. pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool
-5. pub open spec fn spec_concrete(self) -> bool
-6. pub open spec fn spec_wf(self) -> bool
-7. pub open spec fn spec_subst(self, s: SpecSubst) -> (res: SpecRule)
-8. pub fn subst(&self, s: &Subst) -> (res: Rule)
-9. pub fn complete_subst(&self, s: &Subst) -> (res: bool)
-10. pub fn concrete(&self) -> (res: bool)
-11. pub fn wf(&self) -> (res: bool)
 
 ## Ruleset
 
 A RuleSet is a set of Rules in our kernel. 
-Ruleset types are structs that have 1 member:
-1. pub rs: Vec<Rule>
-
-Its spec version for SpecRule is:
-1. pub rs: Seq<SpecRule>
-
-Functions that can be used on RuleSet types:
-1. (in impl DeepView for RuleSet) open spec fn deep_view(&self) -> Self::V
-2. pub open spec fn spec_wf(self) -> bool
-3. pub fn wf(self) -> (res: bool)
+RuleSets are used to be passed to mk_thm along with the index into the RuleSet that you want it to be checked at for unification. 
 
 ## Proof
 
-Proofs are used to construct thms in our kernel. 
-Proof types are enums with 2 members:
-1. Pstep(Rule, Subst, Vec<Proof>)
-2. QED(Prop)
-
-Its spec versions for SpecProof are:
-1. Pstep(SpecRule, SpecSubst, Seq<SpecProof>)
-2. QED(SpecProp)
-
-Functions that can be used on Proof types:
-1. (in impl DeepView for Proof) open spec fn deep_view(&self) -> Self::V
-2. (in impl Clone for Proof) fn clone(&self) -> (res: Self)
-3. (in impl PartialEq for Proof) fn eq(&self, other: &Self) -> (res: bool)
-4. pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
-5. pub open spec fn spec_head(self) -> SpecProp
-6. pub fn head(&self) -> (res: Prop)
-
+Proofs are used to construct theorems in our kernel.
 
 ## Thm
 Theorems (thm) are used in our kernel as the final result that we are producing and want to run Ok on. If the theorem is valid, Ok will be returned, and if it is invalid, Err will be returned.
-Thm types are structs with 2 members:
-1. pub val: Prop
-2. pub p: Proof
-
-Its spec versions for SpecThm are:
-1. pub val: SpecProp
-2. pub p: SpecProof
-
-Functions that can be used on Thm types:
-1. (in impl DeepView for Thm) open spec fn deep_view(&self) -> Self::V
-2. pub open spec fn spec_wf(self, rule_set: SpecRuleSet) -> bool 
-
-## Additional Functions
-
-1. pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
-2. pub proof fn axiom_proof_deep_view(pf: &Proof)
 
 ## mk-leaf and mk_thm
 
