@@ -326,7 +326,7 @@ The resulting veruscode for this datalog program is in fn tst_connected
 
 ## tst_connected_thm
 
-This function will take the ruleset that we just created, an index into the rule it will try to use, a Subst type which corresponds to what we will insert at each node in the proof tree. In theory, if we were given proof tree from the trace reconstruction algorithm, we could just run Ok on it, but for now we need to use mk_thm to generate each step.
+This function will take the ruleset that we just created, an index into the rule it will try to use, a Subst type which corresponds to what we will insert at each node in the proof tree. In theory, if we were given proof tree from the trace reconstruction algorithm, we could just turn each step from trace output to theorems and run Ok on the final theorem, but for now we need to use mk_thm to generate each step.
 
 ```
 
