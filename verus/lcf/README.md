@@ -80,7 +80,8 @@ connected(a, c) :- connected(a, b), edge(b, c).         " a and c are connected 
 edge("x", "y").      " there exists an edge between "x" and "y" "
 edge("x", "f").      " there exists an edge between "x" and "f" "
 edge("y", "z").      " there exists an edge between "y" and "z" "
-edge("z", "w").      " there exists an edge between "z" and "w" " ```
+edge("z", "w").      " there exists an edge between "z" and "w" "
+```
 
 
 The query is: ?- connected("x", "w").
@@ -89,7 +90,7 @@ The resulting veruscode for this datalog program is in fn tst_connected
 
 ## tst_connected
 
-``` pub fn tst_connected() -> (res: RuleSet)
+```pub fn tst_connected() -> (res: RuleSet)
  ensures res.rs.len() >= 0,
 
  {
@@ -178,7 +179,8 @@ The resulting veruscode for this datalog program is in fn tst_connected
             },
         ],
     }
-} ```
+}
+```
 
 ## tst_connected_thm
 
