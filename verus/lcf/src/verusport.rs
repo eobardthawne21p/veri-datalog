@@ -290,6 +290,7 @@ impl SpecProp {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
+                //forall checks every index in list of SpecTerms in args to check if they are complete substitutions
                 0 <= i < args.len() ==> args[i].spec_complete_subst(s),
             SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(s),
         }
@@ -300,6 +301,7 @@ impl SpecProp {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
+                //forall checks every index in list of SpecTerms in args to check if they are concrete
                 0 <= i < args.len() ==> args[i].spec_concrete(),
             SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
         }
@@ -334,6 +336,7 @@ impl SpecProp {
     {
         match self {
             SpecProp::App(h, args) => {
+                //map_values calls spec_subst on all SpecTerm items in args and stores in new sequence
                 let new_sequence = args.map_values(|p: SpecTerm| p.spec_subst(s));
                 SpecProp::App(h, new_sequence)
             },
@@ -365,6 +368,7 @@ impl Prop {
     {
         match self {
             Prop::Eq(x, y) => match (x, y) {
+                //const_eq was needed here because the verifier cannot evaluate x == y on its own
                 (Term::Const(x), Term::Const(y)) => Const::const_eq(&x, &y),
                 (Term::Var(x), Term::Var(y)) => false,
                 (Term::Const(_), Term::Var(_)) | (Term::Var(_), Term::Const(_)) => false,
@@ -393,13 +397,16 @@ impl Prop {
             Prop::App(head, args) => {
                 assert(match self.deep_view() {
                     SpecProp::App(_, spec_args) => forall|k: int|
+                        //specific placement of trigger after calling deep_view on all elements of args of type Term to SpecTerm
                         0 <= k < args.len() ==> (#[trigger] args[k].deep_view()) == spec_args[k],
                     SpecProp::Eq(_, _) => true,
                 });
+                //Next block of code uses a flag calculation instead of forall statement
                 let mut flag = true;
                 for i in 0..args.len()
                     invariant
                         0 <= i <= args.len(),
+                        //forall statement used in invariant to reason about concrete property for all indices of args seq
                         flag <==> forall|j: int|
                             #![auto]
                             0 <= j < i ==> args[j].deep_view().spec_concrete(),
@@ -419,15 +426,18 @@ impl Prop {
     {
         match self {
             Prop::App(head, args) => {
+                //assertion uses forall in App case to show that spec and exec versions are equal
                 assert(match self.deep_view() {
                     SpecProp::App(_, spec_args) => forall|k: int|
                         0 <= k < args.len() ==> (#[trigger] args[k].deep_view()) == spec_args[k],
                     SpecProp::Eq(_, _) => true,
                 });
+                //Next block of code uses a flag calculation instead of forall statement
                 let mut flag = true;
                 for i in 0..args.len()
                     invariant
                         0 <= i <= args.len(),
+                        //forall statement used in invariant to reason about complete_subst property for all indices of args seq
                         flag <==> forall|j: int|
                             #![auto]
                             0 <= j < i ==> args[j].deep_view().spec_complete_subst(s.deep_view()),
@@ -450,6 +460,7 @@ impl Prop {
     {
         match self {
             Prop::App(h, args) => {
+                //assertion uses forall in App case to show that spec and exec versions are equal
                 assert(match self.deep_view() {
                     SpecProp::App(_, spec_args) => forall|k: int|
                         0 <= k < args.len() ==> (#[trigger] args[k].deep_view()) == spec_args[k],
@@ -457,6 +468,7 @@ impl Prop {
                 });
                 let mut v = Vec::<Term>::new();
                 for i in 0..args.len()
+                //loop invariants reason about properties such as complete_subst, concrete, and the result of subst
                     invariant
                         0 <= i <= args.len(),
                         v.len() == i,
@@ -465,14 +477,17 @@ impl Prop {
                             #[trigger] args[j as int].deep_view().spec_complete_subst(
                                 s.deep_view(),
                             )),
+                        //forall statement reasons about the result and the input having functions applied in
                         forall|j: int|
                             #![auto]
                             0 <= j < i ==> args[j].deep_view().spec_subst(s.deep_view())
                                 == v[j].deep_view(),
+                        //forall statement showing that all elements in result are concrete
                         forall|j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete(),
                 {
                     v.push(args[i].clone().subst(s));
                 }
+                //lemma that asserts that two seqs are equal using map_values on SpecTerm type
                 proof {
                     assert_seqs_equal!(v.deep_view(), args.deep_view().map_values(|p: SpecTerm| p.spec_subst(s.deep_view())));
                 }
@@ -532,6 +547,7 @@ impl SpecRule {
     //spec function checks all items in SpecRule for being complete substitutions in SpecSubst
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
         &&& self.head.spec_complete_subst(s)
+        //forall statement checking if all indices in the seq of props
         &&& forall|i: int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_complete_subst(s)
     }
 
@@ -539,6 +555,7 @@ impl SpecRule {
     pub open spec fn spec_concrete(self) -> bool {
         self.head.spec_concrete() && forall|i: int|
             #![auto]
+            //forall statement that checks if all indices in seq of props are concrete
             0 <= i < self.body.len() ==> self.body[i].spec_concrete()
     }
 
@@ -569,25 +586,31 @@ impl Rule {
             res.body.view().len() == self.body.view().len(),
     {
         let mut v = Vec::<Prop>::new();
+        //assertion uses forall statement to show the two positions of deep_view are the same result
         assert(forall|k: int|
             0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                 == self.deep_view().body[k]);
         for i in 0..self.body.len()
             invariant
+            //loop invariants reason about properties such as complete_subst, concrete, and the result of subst
                 0 <= i <= self.body.len(),
                 v.len() == i,
                 forall|i: int|
                     #![auto]
+                    //forall statement that checks all indices in body to see if they are complete subsitutions
                     0 <= i < self.body.deep_view().len()
                         ==> self.body[i].deep_view().spec_complete_subst(s.deep_view()),
                 forall|j: int|
                     #![auto]
+                     //forall statement that checks all indices in body to check if the result is the same as the body index calling subst
                     0 <= j < i ==> self.body[j].deep_view().spec_subst(s.deep_view())
                         == v[j].deep_view(),
+                //forall statement that checks all indices of the result for concreteness
                 forall|j: int| #![auto] 0 <= j < i ==> v[j].deep_view().spec_concrete(),
         {
             v.push(self.body[i].subst(s));
         }
+        //lemma that asserts that two seqs are equal using map_values on SpecProp type
         proof {
             assert_seqs_equal!(v.deep_view(), self.body.deep_view().map_values(|p: SpecProp| p.spec_subst(s.deep_view())));
         }
@@ -602,9 +625,11 @@ impl Rule {
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
     {
         self.head.complete_subst(s) && {
+          //assertion uses forall in body of rule to show that spec and exec versions are equal
             assert(forall|k: int|
                 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                     == self.deep_view().body[k]);
+            //using flag to check all indices of body 
             let mut flag = true;
             for i in 0..self.body.len()
                 invariant
