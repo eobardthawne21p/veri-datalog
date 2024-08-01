@@ -152,8 +152,8 @@ Its spec versions for SpecThm are:
 1. pub val: SpecProp
 2. pub p: SpecProof
 
-Functions that can be used on Proof types:
-1. (in impl DeepView for Proof) open spec fn deep_view(&self) -> Self::V
+Functions that can be used on Thm types:
+1. (in impl DeepView for Thm) open spec fn deep_view(&self) -> Self::V
 2. pub open spec fn spec_wf(self, rule_set: SpecRuleSet) -> bool 
 
 ## Additional Functions
