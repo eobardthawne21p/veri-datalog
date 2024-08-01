@@ -76,11 +76,17 @@ A toy example was ported from the original Dafny to verus. The first function th
 We used the following Datalog program and constructed a ruleset corresponding to its rules and facts. Then we made thms based on the proof tree that we manually drew and implemented in Verus.
 
 connected(a, b) :- edge(a, b).          " a and b are connected if there is an edge from a to b "
+
 connected(a, c) :- connected(a, b), edge(b, c).         " a and c are connected if a and b are connected and there exists an edge from b to c "
+
 edge("x", "y").      " there exists an edge between "x" and "y" "
+
 edge("x", "f").      " there exists an edge between "x" and "f" "
+
 edge("y", "z").      " there exists an edge between "y" and "z" "
+
 edge("z", "w").      " there exists an edge between "z" and "w" "
+
 
 The query is: ?- connected("x","w").
 
