@@ -986,7 +986,7 @@ The query is ?- connected("x","w").
 //function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
 pub fn tst_connected() -> (res: RuleSet)
     ensures
-        res.rs.len() >= 0,
+        res.rs.len() == 6,
 {
     RuleSet {
         rs:
@@ -1069,7 +1069,7 @@ pub fn tst_connected() -> (res: RuleSet)
     }
 }
 
-/*pub fn tst_connected_thm() -> (res: Result<Thm, ()>)
+pub fn tst_connected_thm() -> (res: Result<Thm, ()>)
 {
     let rs = tst_connected();
 
@@ -1111,7 +1111,7 @@ pub fn tst_connected() -> (res: RuleSet)
         Ok(val) => Ok(val),
         Err(_) => Err(()),
     }
-} */
+} 
 
 fn main() {
 }
