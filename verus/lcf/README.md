@@ -28,7 +28,28 @@
 
 ## One Verus specific feature in the implementation of the kernel is the separation between spec and exec code. Exec code is executable code such as functions susbt, mk_lf, and mk_thm that are commonly used in the kernel and are compileed. Spec code is code that reasons about the exec code without compiling and returns errors to the verifier if the code is not correct. Another is the use of loop invariants, triggers, assertions, and lemmas that were used to aid the verifier in reasoning about preconditions, postconditions, and recommendations. The ones left are essential for kernel verification, so do not remove them. They have been thoroughly commented and described in the code body.
 
-## deep_view
+## Another verus specific feature used was deep_view which allowed us to access the deep_view of exec functions and call spec functions in exec mode when writing invariants, preconditions, poscondtions, and asserts. Additional ensures statements were used to help the verifier understand that the deep_view call could be before or after accessing fields of dat types and also reasoning that the exec versions and spec versions functioned the same way. here's an example:
+
+## pub fn wf(self) -> (res: bool)
+        ensures
+            res <==> self.deep_view().spec_wf(),
+    {
+      //using flag to check if all elements in the body are well formed
+        let mut flag = true;
+        assert(forall|k: int|
+            0 <= k < self.rs.len() ==> (#[trigger] self.rs[k].deep_view())
+                == self.deep_view().rs[k]);
+        for i in 0..self.rs.len()
+            invariant
+                0 <= i <= self.rs.len(),
+                //invariant forall checks all body elements if they are well formed using deep_view
+                flag <==> forall|j: int| #![auto] 0 <= j < i ==> self.rs[j].deep_view().spec_wf(),
+        {
+            flag = self.rs[i].wf() && flag
+        }
+        flag
+    }
+    
 
 ## TmpStringHashMap
 
