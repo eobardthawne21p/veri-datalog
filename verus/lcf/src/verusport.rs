@@ -958,6 +958,8 @@ edge("x", "y").
 edge("x", "f").
 edge("y", "z").
 edge("z", "w").
+
+The query is ?- connected("x","w").
 */
 
 //function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
