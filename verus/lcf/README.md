@@ -113,9 +113,7 @@ pub fn tst_connected() -> (res: RuleSet)
                     ),
                 ],
                 id: 0,     
-
                 This corresponds to: connected(a, b) :- edge(a, b).
-
             },
             Rule {
                 head: Prop::App(
@@ -133,9 +131,7 @@ pub fn tst_connected() -> (res: RuleSet)
                     ),
                 ],
                 id: 1,
-
                 This corresponds to: connected(a, c) :- connected(a, b), edge(b, c).
-
             },
             Rule {
                 head: Prop::App(
@@ -147,9 +143,7 @@ pub fn tst_connected() -> (res: RuleSet)
                 ),
                 body: vec![],
                 id: 2,
-
                 This corresponds to: edge("x", "y").
-
             },
             Rule {
                 head: Prop::App(
@@ -161,9 +155,7 @@ pub fn tst_connected() -> (res: RuleSet)
                 ),
                 body: vec![],
                 id: 3,
-
                 This corresponds to: edge("x", "f").
-
             },
             Rule {
                 head: Prop::App(
@@ -175,9 +167,7 @@ pub fn tst_connected() -> (res: RuleSet)
                 ),
                 body: vec![],
                 id: 4,
-
                 This corresponds to: edge("y", "z"). 
-
             },
             Rule {
                 head: Prop::App(
@@ -189,7 +179,6 @@ pub fn tst_connected() -> (res: RuleSet)
                 ),
                 body: vec![],
                 id: 5,
-
                 This corresponds to: edge("z", "w").
             },
         ],
