@@ -290,7 +290,8 @@ impl SpecProp {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
-                //forall checks every index in list of SpecTerms in args to check if they are complete substitutions
+            //forall checks every index in list of SpecTerms in args to check if they are complete substitutions
+
                 0 <= i < args.len() ==> args[i].spec_complete_subst(s),
             SpecProp::Eq(x, y) => x.spec_complete_subst(s) && y.spec_complete_subst(s),
         }
@@ -301,7 +302,8 @@ impl SpecProp {
         match self {
             SpecProp::App(head, args) => forall|i: int|
                 #![auto]
-                //forall checks every index in list of SpecTerms in args to check if they are concrete
+            //forall checks every index in list of SpecTerms in args to check if they are concrete
+
                 0 <= i < args.len() ==> args[i].spec_concrete(),
             SpecProp::Eq(x, y) => x.spec_concrete() && y.spec_concrete(),
         }
@@ -397,7 +399,8 @@ impl Prop {
             Prop::App(head, args) => {
                 assert(match self.deep_view() {
                     SpecProp::App(_, spec_args) => forall|k: int|
-                        //specific placement of trigger after calling deep_view on all elements of args of type Term to SpecTerm
+                     //specific placement of trigger after calling deep_view on all elements of args of type Term to SpecTerm
+
                         0 <= k < args.len() ==> (#[trigger] args[k].deep_view()) == spec_args[k],
                     SpecProp::Eq(_, _) => true,
                 });
@@ -469,6 +472,7 @@ impl Prop {
                 let mut v = Vec::<Term>::new();
                 for i in 0..args.len()
                 //loop invariants reason about properties such as complete_subst, concrete, and the result of subst
+
                     invariant
                         0 <= i <= args.len(),
                         v.len() == i,
@@ -488,6 +492,7 @@ impl Prop {
                     v.push(args[i].clone().subst(s));
                 }
                 //lemma that asserts that two seqs are equal using map_values on SpecTerm type
+
                 proof {
                     assert_seqs_equal!(v.deep_view(), args.deep_view().map_values(|p: SpecTerm| p.spec_subst(s.deep_view())));
                 }
@@ -546,7 +551,9 @@ impl Clone for Rule {
 impl SpecRule {
     //spec function checks all items in SpecRule for being complete substitutions in SpecSubst
     pub open spec fn spec_complete_subst(self, s: SpecSubst) -> bool {
-        &&& self.head.spec_complete_subst(s)
+        &&& self.head.spec_complete_subst(
+            s,
+        )
         //forall statement checking if all indices in the seq of props
         &&& forall|i: int| #![auto] 0 <= i < self.body.len() ==> self.body[i].spec_complete_subst(s)
     }
@@ -555,7 +562,8 @@ impl SpecRule {
     pub open spec fn spec_concrete(self) -> bool {
         self.head.spec_concrete() && forall|i: int|
             #![auto]
-            //forall statement that checks if all indices in seq of props are concrete
+        //forall statement that checks if all indices in seq of props are concrete
+
             0 <= i < self.body.len() ==> self.body[i].spec_concrete()
     }
 
@@ -592,17 +600,20 @@ impl Rule {
                 == self.deep_view().body[k]);
         for i in 0..self.body.len()
             invariant
-            //loop invariants reason about properties such as complete_subst, concrete, and the result of subst
+        //loop invariants reason about properties such as complete_subst, concrete, and the result of subst
+
                 0 <= i <= self.body.len(),
                 v.len() == i,
                 forall|i: int|
                     #![auto]
-                    //forall statement that checks all indices in body to see if they are complete subsitutions
+                //forall statement that checks all indices in body to see if they are complete subsitutions
+
                     0 <= i < self.body.deep_view().len()
                         ==> self.body[i].deep_view().spec_complete_subst(s.deep_view()),
                 forall|j: int|
                     #![auto]
-                     //forall statement that checks all indices in body to check if the result is the same as the body index calling subst
+                //forall statement that checks all indices in body to check if the result is the same as the body index calling subst
+
                     0 <= j < i ==> self.body[j].deep_view().spec_subst(s.deep_view())
                         == v[j].deep_view(),
                 //forall statement that checks all indices of the result for concreteness
@@ -611,6 +622,7 @@ impl Rule {
             v.push(self.body[i].subst(s));
         }
         //lemma that asserts that two seqs are equal using map_values on SpecProp type
+
         proof {
             assert_seqs_equal!(v.deep_view(), self.body.deep_view().map_values(|p: SpecProp| p.spec_subst(s.deep_view())));
         }
@@ -625,7 +637,7 @@ impl Rule {
             res <==> self.deep_view().spec_complete_subst(s.deep_view()),
     {
         self.head.complete_subst(s) && {
-          //assertion uses forall in body of rule to show that spec and exec versions are equal
+            //assertion uses forall in body of rule to show that spec and exec versions are equal
             assert(forall|k: int|
                 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                     == self.deep_view().body[k]);
@@ -636,7 +648,8 @@ impl Rule {
                     0 <= i <= self.body.len(),
                     flag <==> forall|j: int|
                         #![auto]
-                        //invariant forall checks all body elements if they are complere susbtitutions using deep_view
+                    //invariant forall checks all body elements if they are complere susbtitutions using deep_view
+
                         0 <= j < i ==> self.body[j].deep_view().spec_complete_subst(s.deep_view()),
             {
                 flag = self.body[i].clone().complete_subst(s) && flag
@@ -651,7 +664,7 @@ impl Rule {
             res <==> self.deep_view().spec_concrete(),
     {
         self.head.clone().concrete() && {
-          //assertion uses forall for body in rule to show that spec and exec versions are equal
+            //assertion uses forall for body in rule to show that spec and exec versions are equal
             assert(forall|k: int|
                 0 <= k < self.body.len() ==> (#[trigger] self.body[k].deep_view())
                     == self.deep_view().body[k]);
@@ -662,7 +675,8 @@ impl Rule {
                     0 <= i <= self.body.len(),
                     flag <==> forall|j: int|
                         #![auto]
-                        //invariant forall checks if all indices in body are concrete
+                    //invariant forall checks if all indices in body are concrete
+
                         0 <= j < i ==> self.body[j].deep_view().spec_concrete(),
             {
                 flag = self.body[i].clone().concrete() && flag
@@ -710,7 +724,7 @@ impl RuleSet {
         ensures
             res <==> self.deep_view().spec_wf(),
     {
-      //using flag to check if all elements in the body are well formed
+        //using flag to check if all elements in the body are well formed
         let mut flag = true;
         assert(forall|k: int|
             0 <= k < self.rs.len() ==> (#[trigger] self.rs[k].deep_view())
@@ -748,7 +762,8 @@ impl DeepView for Proof {
 //function allows us to reason about deep_view
 pub proof fn axiom_proof_deep_view(pf: &Proof)
     ensures
-    //these matches statements ensure that exec and spec values are the same
+//these matches statements ensure that exec and spec values are the same
+
         pf matches Proof::Pstep(r, s, v) ==> (#[trigger] pf.deep_view()) matches SpecProof::Pstep(
             spec_r,
             spec_s,
@@ -828,7 +843,7 @@ impl Proof {
         ensures
             res.deep_view() <==> self.deep_view().spec_head(),
     {
-      //lemma shows that exec and spec variants are equal
+        //lemma shows that exec and spec variants are equal
         proof { axiom_proof_deep_view(self) }
         ;
         match self {
@@ -887,7 +902,8 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
         //forall statement makes sure that all theorems are well formed
         forall|j: int| #![auto] 0 <= j < args.len() ==> args[j].deep_view().spec_wf(rs.deep_view()),
     ensures
-    //ensures block specifies conditions that must be met in order for the thm to be valid at termination
+//ensures block specifies conditions that must be met in order for the thm to be valid at termination
+
         ((rs.rs[k as int].deep_view().spec_complete_subst(s.deep_view()) && args.len()
             == rs.rs[k as int].body.len() && (forall|j: int|
             #![auto]
@@ -900,11 +916,12 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
     let r = rs.rs[k].clone();
     //assertion states that using deep_view of the original ruleset and accesing elements results in the same as line 900
     assert(rs.deep_view().rs[k as int] == r.deep_view());
-  
+
     if args.len() != r.body.len() || !r.complete_subst(&s) {
         return Err(());
     }
     //flag is used to check conditions for successful thm production
+
     let mut flag = true;
     let r_subst = r.subst(&s);
     for i in 0..args.len()
@@ -914,13 +931,15 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
             r_subst.deep_view() == r.deep_view().spec_subst(s.deep_view()),
             flag <==> forall|j: int|
                 #![auto]
-                //invariant forall shows that different placements od deep_view have same result
+            //invariant forall shows that different placements od deep_view have same result
+
                 0 <= j < i ==> args[j as int].deep_view().val == r_subst.deep_view().body[j as int],
     {
         flag = (Prop::prop_eq(&r_subst.body[i], &args[i].val) && flag);
         assert(flag ==> args[i as int].deep_view().val == r_subst.deep_view().body[i as int]);
     }
     //if all properties were satisfied
+
     if flag == true {
         let mut pfs: Vec<Proof> = Vec::new();
         for i in 0..args.len()
@@ -929,11 +948,13 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
                 0 <= i <= args.len(),
                 forall|j: int|
                     #![auto]
-                    //invariant forall checks if all indices of pfs are valid
+                //invariant forall checks if all indices of pfs are valid
+
                     0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
                 forall|j: int|
                     #![auto]
-                    //invariant forall checks if all indices of pfs.head() == r_subst.body[j]
+                //invariant forall checks if all indices of pfs.head() == r_subst.body[j]
+
                     0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
         {
             pfs.push(args[i].p.clone());
@@ -964,9 +985,9 @@ The query is ?- connected("x","w").
 
 //function that constructs a RuleSet from user-defined rules and facts (rules without bodies)
 pub fn tst_connected() -> (res: RuleSet)
- ensures res.rs.len() >= 0,
-
- {
+    ensures
+        res.rs.len() >= 0,
+{
     RuleSet {
         rs:
             vec![
@@ -1048,7 +1069,7 @@ pub fn tst_connected() -> (res: RuleSet)
     }
 }
 
-/*pub fn tst_connected_thm() -> (res: Result<Thm, ()>) 
+/*pub fn tst_connected_thm() -> (res: Result<Thm, ()>)
 {
     let rs = tst_connected();
 
@@ -1060,7 +1081,7 @@ pub fn tst_connected() -> (res: RuleSet)
     s1.insert("a".to_string(), Const::Atom("x".to_string()));
     s1.insert("b".to_string(), Const::Atom("y".to_string()));
     let thm1 = mk_thm(&rs, 0, &s1, &vec![]);
-  
+
     let mut s2 = TmpStringHashMap::<Const>::new();
     s2.insert("a".to_string(), Const::Atom("x".to_string()));
     s2.insert("c".to_string(), Const::Atom("y".to_string()));
@@ -1089,7 +1110,7 @@ pub fn tst_connected() -> (res: RuleSet)
     match thm6 {
         Ok(val) => Ok(val),
         Err(_) => Err(()),
-    } 
+    }
 } */
 
 fn main() {
