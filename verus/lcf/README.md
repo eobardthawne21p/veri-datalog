@@ -388,7 +388,9 @@ If your proof tree is constructed correctly according to the ruleset that you pr
 
 We still need to: 
 1. Add support for builtinops 
+2. Add support for List variant for Const type
 2. Make ghost versions for proof 
 3. Make examples meet all postcondtions and preconstions 
 4. Port trace reconstruction from Dafny to Verus
 5. Use future builtinops and trace reconstruction algorithm to run examples of X.509 certificates
+
