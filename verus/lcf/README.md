@@ -6,11 +6,27 @@
 
 ## Data types of Kernel
 
-## Const types 
+## Const 
+
+## Term
+
+## Prop
+
+## Rule
+
+## Ruleset
+
+## Proof
+
+## Thm
+
+## mk-leaf and mk_thm
 
 ## Verus specific features in implementation of kernel
 
 ## deep_view
+
+## TmpStringHashMap
 
 ## Missing features
 
