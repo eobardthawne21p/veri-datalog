@@ -929,9 +929,11 @@ pub fn mk_thm(rs: &RuleSet, k: usize, s: &Subst, args: &Vec<Thm>) -> (res: Resul
                 0 <= i <= args.len(),
                 forall|j: int|
                     #![auto]
+                    //invariant forall checks if all indices of pfs are valid
                     0 <= j < i ==> pfs[j].deep_view().spec_valid(rs.deep_view()),
                 forall|j: int|
                     #![auto]
+                    //invariant forall checks if all indices of pfs.head() == r_subst.body[j]
                     0 <= j < i ==> r_subst.deep_view().body[j] == pfs[j].deep_view().spec_head(),
         {
             pfs.push(args[i].p.clone());
