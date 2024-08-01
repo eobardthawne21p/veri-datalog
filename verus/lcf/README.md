@@ -61,7 +61,7 @@ Prop types are enums that have 2 variants:
 1. App(String, Vec<Term>)
 2. Eq(Term, Term)
 
-Its spec versionsfor SpecProp are:
+Its spec versions for SpecProp are:
 1. App(Seq<char>, Seq<SpecTerm>)
 2. Eq(SpecTerm, SpecTerm)
 
@@ -85,7 +85,7 @@ Functions that can be used on Prop types:
 
 Rules are the equivalent to rules in Datalog. A Rule in the kernel with no body is equivalent to a fact in Datalog. In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) :- edge(a, b) is a Rule that is also a rule in Datalog. In this datalog line of code: edge("x", "y"). ---- edge("x", "y"). is a Rule that is a fact in Datalog because it only has a head and no body.
 
-Rule types are structs with the following members:
+Rule types are structs that have 3 members:
 1.  pub head: Prop
 2. pub body: Vec<Prop>
 3. pub id: u64
@@ -110,15 +110,56 @@ Functions that can be used on Rule types:
 
 ## Ruleset
 
+A RuleSet is a set of Rules in our kernel. 
+Ruleset types are structs that have 1 member:
+1. pub rs: Vec<Rule>
+
+Its spec version for SpecRule is:
+1. pub rs: Seq<SpecRule>
+
+Functions that can be used on RuleSet types:
+1. (in impl DeepView for RuleSet) open spec fn deep_view(&self) -> Self::V
+2. pub open spec fn spec_wf(self) -> bool
+3. pub fn wf(self) -> (res: bool)
+
 ## Proof
 
-## Thm
+Proofs are used to construct thms in our kernel. 
+Proof types are enums with 2 members:
+1. Pstep(Rule, Subst, Vec<Proof>)
+2. QED(Prop)
 
-## Notes on functionality of kernel
+Its spec versions for SpecProof are:
+1. Pstep(SpecRule, SpecSubst, Seq<SpecProof>)
+2. QED(SpecProp)
+
+Functions that can be used on Proof types:
+1. (in impl DeepView for Proof) open spec fn deep_view(&self) -> Self::V
+2. (in impl Clone for Proof) fn clone(&self) -> (res: Self)
+3. (in impl PartialEq for Proof) fn eq(&self, other: &Self) -> (res: bool)
+4. pub open spec fn spec_valid(self, rule_set: SpecRuleSet) -> bool
+5. pub open spec fn spec_head(self) -> SpecProp
+6. pub fn head(&self) -> (res: Prop)
+
+
+## Thm
+Theorems (thm) are used in our kernel as the final result that we are producing and want to run Ok on. If the theorem is valid, Ok will be returned, and if it is invalid, Err will be returned.
+Thm types are structs with 2 members:
+1. pub val: Prop
+2. pub p: Proof
+
+Its spec versions for SpecThm are:
+1. pub val: SpecProp
+2. pub p: SpecProof
+
+Functions that can be used on Proof types:
+1. (in impl DeepView for Proof) open spec fn deep_view(&self) -> Self::V
+2. pub open spec fn spec_wf(self, rule_set: SpecRuleSet) -> bool 
 
 ## Additional Functions
 
-pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
+1. pub fn terms_eq(a: &Vec<Term>, b: &Vec<Term>) -> (res: bool)
+2. pub proof fn axiom_proof_deep_view(pf: &Proof)
 
 ## mk-leaf and mk_thm
 
