@@ -59,7 +59,7 @@ TmpStringHashMap was another Verus specific feature in the implementation of the
 
 Some missing features from this verified kernel in Verus versus the original devleoped in Dafny are:
 1. BuiltInOp support
-2. #[verifier::external_body] used in some palces due to limitations in Verus (needs to be changed when support is added in Verus)
+2. Some functions are axiomatized -> need verus features support or change in code to make the functions verify with using #[verifier::external_body]
 
 ## Toy Example of kernel working
 
@@ -240,8 +240,11 @@ If your proof tree is constructed correctly according to the ruleset that you pr
 We still need to: 
 1. Add support for builtinops 
 2. Add support for List variant for Const type
-2. Make ghost versions for proof 
 3. Make examples meet all postcondtions and preconstions 
 4. Port trace reconstruction from Dafny to Verus
 5. Use future builtinops and trace reconstruction algorithm to run examples of X.509 certificates
+6. make the Proof in Thm be ghost
+7. try to remove some cloning in mk_thm and other functions, if possible
+
+
 

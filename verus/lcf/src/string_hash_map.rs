@@ -4,23 +4,6 @@ use std::collections::HashMap;
 
 verus!{
 
-// #[verifier::external_type_specification]
-// #[verifier::external_body]
-// pub struct ExRandomState(RandomState);
-    
-
-// // We now specify the behavior of `HashMap`.
-// #[verifier::external_type_specification]
-// #[verifier::external_body]
-// #[verifier::reject_recursive_types(Key)]
-// #[verifier::reject_recursive_types(Value)]
-// #[verifier::reject_recursive_types(S)]
-// pub struct ExHashMap<Key, Value, S>(HashMap<Key, Value, S>);
-
-
-// For now, we cannot use the vstd StringHashMap, since it doesn't have
-// impl Clone, impl DeepView, or impl PartialEq.
-// TODO(pratap): add those impls to the stdlib type, or find a better workaround
 
 #[verifier::ext_equal]
 #[verifier::reject_recursive_types(Value)]
