@@ -751,7 +751,7 @@ impl DeepView for Proof {
     closed spec fn deep_view(&self) -> Self::V;
 }
 
-//#[verifier::external_body] needed due to postocondition failing
+//#[verifier::external_body] needed due to issue verus-lang/verus#1222
 #[verifier::external_body]
 //allows us to reason about deep_view
 pub proof fn axiom_proof_deep_view(pf: &Proof)

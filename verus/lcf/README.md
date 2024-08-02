@@ -1,4 +1,4 @@
-## Verified Kernel in Dafny
+# Verified Kernel in Dafny
 
 ## Purpose 
 
@@ -6,40 +6,41 @@ The purpose of this verified kernel is to encode a RuleSet corresponding to a se
 
 ## Data types of Kernel
 
-## Const 
+### Const 
 
 Const is the base type. The current Kernel implementation only deals with integers and strings. Future work will include support for lists.
 
-## Subst
+### Subst
 
 Type Subst is a hashmap of Consts.
 Whenever the susbt function in used on any data type, high-order data types like Proof, Rule, etc. will call subst of the next-lower type in the hierarchy. Therefore, all items in Subst hashmaps are of type Const.
 
-## Term
+### Term
 
-Terms are used in the kernel to form Props which are the heads of Rules. When running mk_thm and performing substitutions, they will eventually be converted to Consts and the verifier will check for concreteness.
+Terms are used as arguments in an Atom. They are used in the kernel to form Props which are the heads of Rules. When running mk_thm and performing substitutions, they will eventually be converted to Consts and the verifier will check for concreteness.
 
-## Prop
+### Prop
 
-Props are the heads of rules that are used in rulesets for mk_thm.
-In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) is the Prop. Props are used as QED or termination in proofs. 
+Props are the heads of rules that are used in rulesets for mk_thm. They can also be 
+In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) is a Prop in the head form. edge(a, b) is a Prop in the body form. Props are used as QED or termination in proofs. 
 
-## Rule
+### Rule
 
 Rules are the equivalent to rules in Datalog. A Rule in the kernel with no body is equivalent to a fact in Datalog. In this datalog line of code: connected(a, b) :- edge(a, b). ---- connected(a, b) :- edge(a, b) is a Rule that is also a rule in Datalog. In this datalog line of code: edge("x", "y"). ---- edge("x", "y"). is a Rule that is a fact in Datalog because it only has a head and no body.
 
 
-## Ruleset
+### Ruleset
 
 A RuleSet is a set of Rules in our kernel. 
+RuleSets are composed of all rules in Datalogs programs that are run. They are related to valid() for Proof.
 RuleSets are used to be passed to mk_thm along with the index into the RuleSet that you want it to be checked at for unification. 
 
-## Proof
+### Proof
 
 Proofs are used to construct theorems in our kernel.
 
-## Thm
-Theorems (thm) are used in our kernel as the final result that we are producing and want to run Ok on. If the theorem is valid, Ok will be returned, and if it is invalid, Err will be returned.
+### Thm
+Theorems (thm) are used in our kernel as the final result that we are producing and want to check if they are valid or not. We check if they are valid by seeing if they are well formed.
 
 ## mk-leaf and mk_thm
 
